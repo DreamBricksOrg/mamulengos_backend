@@ -3,7 +3,7 @@
 Escopo inicial conforme backlog:
 
 - Uso de api para gerar imagens com Stable Diffusion
-- FIFO para a Geração de imagens (CRUD/admin)
+- FIFO para a Geração de imagens
 - Health-check
 
 ## Como rodar
