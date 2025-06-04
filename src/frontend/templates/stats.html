@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Usage Stats</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Site Statistics</h1>
+        <h2>Total files generated: {{ total_files }}</h2>
+
+        <h3>Activity by Hour:</h3>
+        <img src="data:image/png;base64,{{ graph_base64 }}" alt="Activity Graph" class="graph-img">
+
+        <h3>📜 Last 100 lines of Log:</h3>
+        <pre class="log-box">{{ log_text }}</pre>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

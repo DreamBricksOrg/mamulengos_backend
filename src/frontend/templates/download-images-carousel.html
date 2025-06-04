@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile/download-images-carousel.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile/default.css') }}">
+    <link rel="stylesheet" href="https://use.typekit.net/nsl6jfv.css">
+    <title>Download</title>
+</head>
+
+<body>
+<div class="container">
+
+    <img class="logo" src="{{ url_for('static', filename='images/logo2.png') }}">
+
+    <img class="logo-beba" src="{{ url_for('static', filename='images/beba_dessa_arte_v01.png') }}">
+
+    <div class="container-items">
+
+        <div class="images-container">
+            {% if image_paths %}
+            {% for image_path in image_paths %}
+            <img src="{{ image_path }}" alt="Imagem {{ loop.index }}" class="{% if loop.first %}active{% endif %}">
+            {% endfor %}
+            {% else %}
+            <p>Nenhuma imagem encontrada para o código {{ cod }}.</p>
+            {% endif %}
+        </div>
+
+        <p>Escaneie para salvar sua foto.</p>
+
+        <img class="qrcode" src="/qrcode-images?cod={{ cod }}" width="40%">
+
+
+        <div class="share">
+            <p>Compartilhe usando <span class="span-green">#BebaDessaArte</span></p>
+            <p>e marque <span class="span-green">@orfeucafes</span></p>
+        </div>
+
+    </div>
+
+
+</div>
+
+<script>
+    const images = document.querySelectorAll('.images-container img');
+    let currentIndex = 0;
+
+    function showNextImage() {
+
+        images[currentIndex].classList.remove('active');
+
+        currentIndex = (currentIndex + 1) % images.length;
+
+        images[currentIndex].classList.add('active');
+    }
+
+    setInterval(showNextImage, 2000);
+
+
+</script>
+
+
+</body>
+</html>

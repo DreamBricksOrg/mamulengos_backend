@@ -1,0 +1,319 @@
+{
+  "3": {
+    "inputs": {
+      "seed": 539756363671684,
+      "steps": 10,
+      "cfg": 3,
+      "sampler_name": "dpmpp_2m_sde",
+      "scheduler": "karras",
+      "denoise": 1,
+      "model": [
+        "14",
+        0
+      ],
+      "positive": [
+        "17",
+        0
+      ],
+      "negative": [
+        "7",
+        0
+      ],
+      "latent_image": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "4": {
+    "inputs": {
+      "ckpt_name": "juggernautXL_juggXIByRundiffusion.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "5": {
+    "inputs": {
+      "width": 768,
+      "height": 1568,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "6": {
+    "inputs": {
+      "text": [
+        "28",
+        0
+      ],
+      "clip": [
+        "4",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode Man"
+    }
+  },
+  "7": {
+    "inputs": {
+      "text": "reddish tones, deformed, highlights, red spots, closed eyes, low quality, signature, ugly, off-center, deformed, cropped, frame, worst quality, lowres, JPEG artifacts, text, watermark, nsfw",
+      "clip": [
+        "4",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "8": {
+    "inputs": {
+      "samples": [
+        "3",
+        0
+      ],
+      "vae": [
+        "4",
+        2
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "9": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "36",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "14": {
+    "inputs": {
+      "weight": 0.85,
+      "start_at": 0,
+      "end_at": 1,
+      "weight_type": "standard",
+      "model": [
+        "16",
+        0
+      ],
+      "ipadapter": [
+        "16",
+        1
+      ],
+      "image": [
+        "31",
+        0
+      ]
+    },
+    "class_type": "IPAdapter",
+    "_meta": {
+      "title": "IPAdapter"
+    }
+  },
+  "15": {
+    "inputs": {
+      "image": "maekiko.png",
+      "upload": "image"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "16": {
+    "inputs": {
+      "preset": "FACEID PLUS V2",
+      "lora_strength": 0.6,
+      "provider": "CPU",
+      "model": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "IPAdapterUnifiedLoaderFaceID",
+    "_meta": {
+      "title": "IPAdapter Unified Loader FaceID"
+    }
+  },
+  "17": {
+    "inputs": {
+      "text": [
+        "23",
+        0
+      ],
+      "clip": [
+        "4",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "18": {
+    "inputs": {
+      "action": "append",
+      "tidy_tags": "yes",
+      "text_a": [
+        "19",
+        0
+      ],
+      "text_b": [
+        "28",
+        0
+      ],
+      "text_c": "",
+      "result": "solo, 1boy, male focus, glasses, portrait, realistic, young, european golden crown, gold and red ornaments, european red coat with white fur, renascence, inside an old castle, old paintings on the walls, large windows with red curtains, blury background, photo, photorealistic, realism"
+    },
+    "class_type": "StringFunction|pysssss",
+    "_meta": {
+      "title": "String Function 🐍"
+    }
+  },
+  "19": {
+    "inputs": {
+      "model": "wd-v1-4-convnextv2-tagger-v2",
+      "threshold": 0.85,
+      "character_threshold": 0.85,
+      "replace_underscore": true,
+      "trailing_comma": true,
+      "exclude_tags": "denim jacket, black shirt, nude, pubic hair, nipples, medium breasts, large breasts, female pubic hair, monochrome, black shirt, pink shirt, yellow shirt, green shirt, blue shirt, hat, bikini, swimsuit, breasts, shirt, blue, green, yellow, orange, red, brown, cian, pink, green shirt",
+      "tags": "solo, 1boy, male focus, glasses, portrait, realistic, ",
+      "image": [
+        "31",
+        0
+      ]
+    },
+    "class_type": "WD14Tagger|pysssss",
+    "_meta": {
+      "title": "WD14 Tagger 🐍"
+    }
+  },
+  "20": {
+    "inputs": {
+      "image": "logo_amstel_v02.png",
+      "upload": "image"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "23": {
+    "inputs": {
+      "action": "append",
+      "tidy_tags": "yes",
+      "text_a": [
+        "28",
+        0
+      ],
+      "text_b": [
+        "19",
+        0
+      ],
+      "text_c": "",
+      "result": "young, european golden crown, gold and red ornaments, european red coat with white fur, renascence, inside an old castle, old paintings on the walls, large windows with red curtains, blury background, photo, photorealistic, realism, solo, 1boy, male focus, glasses, portrait, realistic,"
+    },
+    "class_type": "StringFunction|pysssss",
+    "_meta": {
+      "title": "String Function 🐍"
+    }
+  },
+  "28": {
+    "inputs": {
+      "text": "young, european golden crown, gold and red ornaments, european red coat with white fur, renascence, inside an old castle, old paintings on the walls, large windows with red curtains, blury background, photo, photorealistic, realism"
+    },
+    "class_type": "Text Multiline",
+    "_meta": {
+      "title": "Text Multiline"
+    }
+  },
+  "31": {
+    "inputs": {
+      "number_of_faces": 1,
+      "scale_factor": 1.5,
+      "shift_factor": 0.45,
+      "start_index": 0,
+      "max_faces_per_image": 50,
+      "aspect_ratio": "1:1",
+      "image": [
+        "34",
+        0
+      ]
+    },
+    "class_type": "AutoCropFaces",
+    "_meta": {
+      "title": "Auto Crop Faces"
+    }
+  },
+  "34": {
+    "inputs": {
+      "width": 1600,
+      "height": 1600,
+      "interpolation": "nearest",
+      "method": "keep proportion",
+      "condition": "downscale if bigger",
+      "multiple_of": 0,
+      "image": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "ImageResize+",
+    "_meta": {
+      "title": "🔧 Image Resize"
+    }
+  },
+  "36": {
+    "inputs": {
+      "move_watermark": false,
+      "move_watermark_step": 10,
+      "watermark_text": "",
+      "font": "assets/fonts/DMSans-VariableFont_opsz,wght.ttf",
+      "font_size": 16,
+      "logo_scale_percentage": 32,
+      "x_padding": 255,
+      "y_padding": 20,
+      "rotation": 0,
+      "opacity": 0,
+      "image": [
+        "8",
+        0
+      ],
+      "logo_image": [
+        "20",
+        0
+      ],
+      "mask": [
+        "20",
+        1
+      ]
+    },
+    "class_type": "KimaraAIWatermarker",
+    "_meta": {
+      "title": "Kimara.ai Advanced Watermarker"
+    }
+  }
+}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile/download-images.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile/default.css') }}">
+    <title>Download</title>
+</head>
+
+<body>
+<div class="container">
+
+    <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Exemplo de imagem">
+
+    <div class="images-container">
+        {% if image_paths %}
+        {% for image_path in image_paths %}
+        <div class="image-item">
+            <img src="{{ image_path }}" alt="Imagem {{ loop.index }}">
+
+            <button onclick="downloadImage('{{ image_path }}')">
+
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+            </button>
+
+            <button onclick="shareImage('{{ image_path }}')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+            </button>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>Nenhuma imagem encontrada para o código {{ cod }}.</p>
+        {% endif %}
+    </div>
+
+    <div class="download">
+        <a href="#" onclick="downloadAllImages('{{ cod }}')">
+            <img src="{{ url_for('static', filename='images/baixar_btn.png') }}" width="300px"
+                 alt="Baixar todas as imagens">
+        </a>
+    </div>
+
+</div>
+
+<script>
+    // Função para baixar todas as imagens
+    function downloadAllImages(cod) {
+        fetch(`/download-images?cod=${cod}`)
+            .then(response => response.json())
+            .then(imageUrls => {
+            imageUrls.forEach(url => {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = '';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        })
+            .catch(error => console.error('Error downloading images:', error));
+    }
+
+    // Função para baixar uma única imagem
+    function downloadImage(imageUrl) {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = '';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Função para compartilhar a imagem como arquivo
+    async function shareImage(imageUrl) {
+        try {
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], 'arte-orfeu.jpg', { type: blob.type });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Confira essa obra de arte!',
+                });
+            } else {
+                alert('O compartilhamento de arquivos não é suportado neste navegador.');
+            }
+        } catch (error) {
+            console.error('Erro ao compartilhar a imagem:', error);
+        }
+    }
+
+</script>
+
+</body>
+</html>

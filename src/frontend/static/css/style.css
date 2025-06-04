@@ -1,0 +1,35 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    color: #333;
+    margin: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+h1, h2, h3 {
+    color: #2c3e50;
+}
+
+.graph-img {
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 30px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.log-box {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 15px;
+    overflow-x: auto;
+    height: 400px;
+    font-family: monospace;
+    font-size: 14px;
+    white-space: pre-wrap;
+    border-radius: 8px;
+}

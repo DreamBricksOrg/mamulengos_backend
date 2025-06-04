@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imagem de Fundo</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .full-screen-image {
+            background-image: url("/static/images/cta_v04.png");
+            background-size: cover;
+            background-position: center;
+            height: 100%;
+            width: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="full-screen-image" onclick="sendPostRequest()"></div>
+
+    <form id="postForm" action="/cta" method="POST" style="display: none;">
+
+    </form>
+
+    <script>
+        function sendPostRequest() {
+            document.getElementById("postForm").submit();
+        }
+    </script>
+</body>
+</html>

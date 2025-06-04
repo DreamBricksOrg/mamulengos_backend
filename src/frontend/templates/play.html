@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile/play.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile/default.css') }}">
+    <title>Termos e Condições</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+
+<body>
+
+<script>
+    var socket = io();
+
+    var cod = "{{ cod }}";
+
+    socket.emit('join', {cod: cod});
+
+    socket.on('render_images', function(data) {
+        if (data.cod === cod) {
+            window.location.href = '/show_images/' + cod;
+        }
+    });
+
+    socket.on('status', function(data) {
+        console.log(data.msg);
+    });
+</script>
+
+<div class="container">
+
+    <div class="message">
+        <h1>VAMO LÁ!</h1>
+
+        <p>
+            CONTINUE NA TELA DO PONTO DE ÔNIBUS
+        </p>
+    </div>
+
+
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile/terms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile/default.css') }}">
+    <link rel="stylesheet" href="https://use.typekit.net/nsl6jfv.css">
+    <title>Termos e Condições</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<script>
+    // Define o tempo em segundos
+    let timer = "{{ timer }}"; // Certifique-se de que o valor é passado corretamente
+    let tempo = parseInt(timer, 10);
+
+    // Verifica se o tempo é um número válido e não é negativo
+    if (isNaN(tempo) || tempo < 0) {
+        console.error('Valor de timer inválido. Usando 0 como padrão.');
+        tempo = 0;
+    }
+
+    function iniciarTimer() {
+        const intervalo = setInterval(() => {
+            if (tempo <= 0) {
+                clearInterval(intervalo);
+                window.location.href = "/logs/timeout/TERMOS_ABANDONADO";
+            } else {
+                tempo--;
+            }
+            console.log(tempo);
+        }, 1000);
+    }
+
+    window.onload = iniciarTimer;
+</script>
+<script>
+    var socket = io();
+    var link_id = "{{ link_id }}";
+
+    socket.on('invalidate_link', function(data) {
+        if (data.link_id === link_id) {
+            alert("Este link não é mais válido.");
+            window.location.href = "/link_invalid";
+        }
+    });
+
+    function toggleButton() {
+        const checkbox = document.getElementById('terms-checkbox');
+        const acceptButton = document.getElementById('accept-button');
+        acceptButton.disabled = !checkbox.checked;
+    }
+
+
+</script>
+<body>
+<div class="container">
+    <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}">
+
+    <div class="container-items">
+        <div class="terms">
+            <h1>TERMO DE AUTORIZAÇÃO DE USO DE IMAGEM</h1>
+            <p><strong>1. -</strong> Pelo presente instrumento (“<strong>Termo</strong>”), o
+                <strong>Autorizador</strong>, abaixo
+                qualificado, autoriza a <strong>CAFÉ FAZENDA SERTÃOZINHO LTDA</strong>, empresa com sede na AV TUCUNARÉ,
+                955 - CEP: 06460-020 – BARUERI/SP, inscrita no CNPJ/ME sob o nº 07.187.796/0004-25, doravante denominada
+                simplesmente <strong>CAFÉ FAZENDA SERTÃOZINHO LTDA</strong>, a título gratuito, universal, em caráter
+                total, definitivo, irrevogável e irretratável, a captação temporária de sua imagem, captadas pela
+                <strong>CAFÉ FAZENDA SERTÃOZINHO LTDA</strong> ou por terceiros atuantes na campanha publicitária
+                produzida pela <strong>CAFÉ FAZENDA SERTÃOZINHO LTDA</strong>, provisoriamente intitulada “<strong>CAMPANHA
+                    BEBA DESSA ARTE</strong>”, que consiste em uma face publicitária com abertura de câmera e aplicação
+                de filtro via Inteligência Artificial, localizada em São Paulo, no abrigo da Av. Paulista, 900, onde o
+                participante poderá capturar a própria imagem com filtro aplicado e baixar pelo celular através de QR
+                Code.
+            </p>
+            <p><strong>2. -</strong> Reconhece expressamente o <strong>Autorizador</strong> que a <strong>CAFÉ FAZENDA
+                SERTÃOZINHO LTDA</strong>, na qualidade de detentora dos direitos autorais patrimoniais sobre a <strong>Campanha</strong>
+                e tendo em vista a autorização ora concedida, poderá, a seu exclusivo critério, pelo prazo de duração da
+                <strong>Campanha</strong>, captar temporariamente a sua imagem livremente, para a reprodução da imagem
+                gerada pela face na ativação publicitária da <strong>Campanha</strong>. <br/><br/>&emsp;<strong>2.1.
+                    -</strong> Ao
+                aceitar este <strong>Termo</strong>, você declara e garante: (i) ser pessoa física e totalmente capaz,
+                com idade igual ou superior a 18 (dezoito) anos, ou emancipado legalmente, conforme o Código Civil
+                Brasileiro; (ii) ser o único titular de todos os direitos de imagem que serão capturadas e, portanto,
+                possui plenos poderes e autoridade para ceder à <strong>CAFÉ FAZENDA SERTÃOZINHO LTDA</strong> todos os
+                direitos contemplados neste <strong>Termo</strong>; (iii) que o uso da imagem pela <strong>CAFÉ FAZENDA
+                    SERTÃOZINHO LTDA</strong> não viola ou não violará nenhum direito de qualquer pessoa, seja ela
+                física ou jurídica. <br/><br/>&emsp;<strong>2.2. -</strong> Após o aceite deste <strong>Termo</strong> e
+                participação na
+                <strong>Campanha</strong>, o <strong>Autorizador</strong> poderá receber a imagem em seu dispositivo
+                móvel através da leitura de um QR Code que será exibido na tela e ficará ativo e válido por um período
+                de até 01 (um) minuto. Após este período ou imediatamente após a leitura do QR Code, este expirará e a
+                imagem será automaticamente deletada, não podendo ser recuperada.</p>
+            <p><strong>3. -</strong> A presente autorização entra em vigor na data do aceite expresso ao presente
+                <strong>Termo</strong>
+                e assim perdurará por todo o prazo de duração da <strong>Campanha</strong> objeto deste
+                <strong>Termo</strong>, a qual iniciará no dia 15 de outubro de 2024 e terminará no dia 28 de outubro de
+                2024.
+            </p>
+
+            <p><strong>4. -</strong> A autorização ora concedida é feita em caráter gratuito, ficando desde já avençado
+                que o <strong>Autorizador</strong>
+                nada tem e nada terá a reclamar com relação à autorização ora concedida, em Juízo ou fora dele.</p>
+            <p><strong>5. -</strong> A <strong>CAFÉ FAZENDA SERTÃOZINHO LTDA</strong> é a única e exclusiva responsável
+                pela <strong>Campanha</strong>
+                e pela captação temporária das imagens, nos termos previstos na Lei nº 13.709/2018 (“LGPD”), após a
+                participação na ativação da <strong>Campanha</strong> todas as imagens feitas do usuário extraídos serão
+                destruídos em até 01 (um) minuto, sendo certo que as imagens não ficaram armazenadas nos equipamentos
+                que compõem a tela da face publicitária (“MUB”).
+            </p>
+            <p><strong>6. -</strong> A <strong>CAFÉ FAZENDA SERTÃOZINHO LTDA</strong> seguirá rígidos padrões de
+                segurança para proteger
+                a sua imagem e somente as compartilhará com produtoras de conteúdo audiovisual por ela contratadas para
+                fins exclusivos de produção da <strong>Campanha</strong> e/ou de outras <strong>Campanhas</strong>
+                audiovisuais da <strong>CAFÉ FAZENDA SERTÃOZINHO LTDA</strong>. A <strong>CAFÉ FAZENDA SERTÃOZINHO
+                    LTDA</strong> é a controladora destes dados desta <strong>Campanha</strong> e o
+                <strong>Autorizador</strong> poderá exercer os direitos previstos na LGPD, incluindo aqueles de acesso,
+                correção e exclusão por meio do canal de atendimento: atendimento@cafeorfeu.com.br, WhatsApp (11)
+                5184-3564 ou Instagram: @orfeucafes
+            </p>
+            <br/>
+
+            <h1>CONSIDERAÇÕES FINAIS</h1>
+            <p>O presente <strong>Termo</strong> poderá ser alterado ou suspenso a qualquer tempo, principalmente, mas
+                não somente, por motivo de caso fortuito, força maior ou qualquer outro fator ou motivo imprevisto.
+            </p>
+            <p>A <strong>CAFÉ FAZENDA SERTÃOZINHO LTDA</strong> é a única responsável pela <strong>Campanha</strong>
+                isentando o Grupo Eletromidia de quaisquer danos, materiais ou morais, que tenham sido ocasionados em
+                função da <strong>Campanha</strong>.</p>
+            <br/>
+
+        </div>
+
+        <div class="checkbox">
+            <input type="checkbox" id="terms-checkbox" onchange="toggleButton()">
+            <label for="terms-checkbox">Declaro que li e concordo com os termos de autorização para uso da imagem
+                pessoal</label>
+        </div>
+
+        <div class="buttons">
+
+            <form action="/deny" method="POST">
+                <button class="button-deny" type="submit">Voltar</button>
+            </form>
+
+            <form action="/accept" method="POST">
+                <button class="button-accept" id="accept-button" type="submit" disabled>Avançar</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
