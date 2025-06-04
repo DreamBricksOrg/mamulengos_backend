@@ -1,119 +1,191 @@
 import os
-from datetime import datetime
-import zipfile
 import io
+import zipfile
+import base64
+import structlog
+
+from datetime import datetime
+from typing import Dict, Union
 from collections import defaultdict
 
-import base64
 import matplotlib.pyplot as plt
+from fastapi import HTTPException
+
+logger = structlog.get_logger()
 
 
-def create_zip_of_images(folder_path):
+def create_zip_of_images(folder_path: str) -> io.BytesIO:
+    """
+    Cria um buffer ZIP contendo todas as imagens (.png, .jpg, .jpeg) encontradas no caminho informado.
+    
+    :param folder_path: Caminho da pasta cujas imagens serão zipadas.
+    :return: BytesIO já posicionado no início, pronto para ser retornado em uma resposta (StreamingResponse).
+    :raises HTTPException: Se a pasta não existir ou não for acessível.
+    """
+    if not os.path.isdir(folder_path):
+        logger.info("create_zip_of_images: Pasta não encontrada", folder_path=folder_path)
+        raise HTTPException(status_code=404, detail="Pasta não encontrada para criar ZIP")
+
     zip_buffer = io.BytesIO()
-
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-
-        for root, dirs, files in os.walk(folder_path):
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for root, _, files in os.walk(folder_path):
             for file in files:
-
-                if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                if file.lower().endswith((".png", ".jpg", ".jpeg")):
                     file_path = os.path.join(root, file)
-                    zip_file.write(file_path, os.path.relpath(file_path, folder_path))
-
+                    # Relpath garante a estrutura interna correta dentro do ZIP
+                    arcname = os.path.relpath(file_path, folder_path)
+                    zip_file.write(file_path, arcname)
     zip_buffer.seek(0)
-
     return zip_buffer
 
 
-def generate_timestamped_filename(base_folder: str, prefix: str, extension: str) -> str:
+def generate_timestamped_filename(
+    base_folder: str, prefix: str, extension: str
+) -> str:
     """
-    Generates a filename with the current timestamp in the format:
-    {prefix}_YYYYMMDD_HHMMSS.{extension}
+    Gera um nome de arquivo com timestamp no formato:
+    {base_folder}/{prefix}_YYYYMMDD_HHMMSS.{extension}
 
-    Parameters:
-    - base_folder (str): The folder where the file should be saved.
-    - prefix (str): The prefix for the filename.
-    - extension (str): The file extension (without the dot).
-
-    Returns:
-    - str: The full file path with the formatted filename.
+    :param base_folder: Pasta onde o arquivo será salvo.
+    :param prefix: Prefixo que identifica o arquivo.
+    :param extension: Extensão do arquivo (sem ponto).
+    :return: Caminho completo para o novo arquivo.
     """
-    # Get current date and time
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    # Construct the filename
     filename = f"{prefix}_{timestamp}.{extension}"
-
-    # Return the full path
     return os.path.join(base_folder, filename)
 
 
 def read_last_n_lines(filename: str, n: int) -> str:
-    with open(filename, 'rb') as file:
-        # goes to the end of the file
-        file.seek(0, os.SEEK_END)
-        file_size = file.tell()
+    """
+    Lê as últimas n linhas de um arquivo de texto, sem carregar o arquivo inteiro em memória.
+    
+    :param filename: Caminho para o arquivo.
+    :param n: Número de linhas finais a serem retornadas.
+    :return: Uma string contendo as últimas n linhas separadas por '\n'.
+    :raises HTTPException: Se o arquivo não existir ou não puder ser aberto.
+    """
+    if not os.path.isfile(filename):
+        logger.info("read_last_n_lines: Arquivo não encontrado", filename=filename)
+        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
 
-        buffer = bytearray()
-        lines_found = 0
-        block_size = 1024
+    try:
+        with open(filename, "rb") as file:
+            file.seek(0, os.SEEK_END)
+            file_size = file.tell()
+            buffer = bytearray()
+            lines_found = 0
+            block_size = 1024
 
-        # reads small blocks until the target number of lines is found
-        while file_size > 0 and lines_found <= n:
-            read_size = min(block_size, file_size)
-            file.seek(file_size - read_size)
-            buffer = file.read(read_size) + buffer
-            lines_found = buffer.count(b'\n')
-            file_size -= read_size
+            while file_size > 0 and lines_found <= n:
+                read_size = min(block_size, file_size)
+                file.seek(file_size - read_size)
+                chunk = file.read(read_size)
+                buffer = chunk + buffer
+                lines_found = buffer.count(b"\n")
+                file_size -= read_size
 
-        # Now decode only once at the end
-        return b'\n'.join(buffer.splitlines()[-n:]).decode('utf-8')
+            last_lines = buffer.splitlines()[-n:]
+            return b"\n".join(last_lines).decode("utf-8", errors="replace")
+    except Exception as e:
+        logger.info("read_last_n_lines: Erro ao ler arquivo", error=str(e), filename=filename)
+        raise HTTPException(status_code=500, detail="Erro ao ler o arquivo")
 
 
 def count_files_in_directory(directory_path: str) -> int:
+    """
+    Conta quantos arquivos existem diretamente em um diretório (sem olhar subpastas).
+    
+    :param directory_path: Caminho da pasta alvo.
+    :return: Quantidade de arquivos nessa pasta.
+    :raises HTTPException: Se a pasta não existir ou não puder ser acessada.
+    """
+    if not os.path.isdir(directory_path):
+        logger.info("count_files_in_directory: Pasta não encontrada", directory=directory_path)
+        raise HTTPException(status_code=404, detail="Pasta não encontrada")
     return sum(1 for entry in os.scandir(directory_path) if entry.is_file())
 
 
 def count_files_with_extension(directory_path: str, extension: str) -> int:
-    extension = extension.lower().lstrip('.')  # Normalize extension (remove dot if given)
+    """
+    Conta arquivos em um diretório que terminem com a extensão dada (case-insensitive).
+    
+    :param directory_path: Caminho da pasta alvo.
+    :param extension: Extensão a ser filtrada (com ou sem ponto).
+    :return: Quantidade de arquivos com essa extensão.
+    :raises HTTPException: Se a pasta não existir ou não puder ser acessada.
+    """
+    if not os.path.isdir(directory_path):
+        logger.info("count_files_with_extension: Pasta não encontrada", directory=directory_path)
+        raise HTTPException(status_code=404, detail="Pasta não encontrada")
+
+    ext = extension.lower().lstrip(".")
     return sum(
         1
         for entry in os.scandir(directory_path)
-        if entry.is_file() and entry.name.lower().endswith(f'.{extension}')
+        if entry.is_file() and entry.name.lower().endswith(f".{ext}")
     )
 
 
-def count_files_between_dates(directory_path: str, start_date: datetime, end_date: datetime) -> int:
-    result = 0
+def count_files_between_dates(
+    directory_path: str, start_date: datetime, end_date: datetime
+) -> int:
+    """
+    Conta arquivos cuja data de criação esteja entre start_date e end_date (inclusive).
+    
+    :param directory_path: Caminho da pasta alvo.
+    :param start_date: Data/hora inicial.
+    :param end_date: Data/hora final.
+    :return: Quantidade de arquivos no intervalo.
+    :raises HTTPException: Se a pasta não existir ou não puder ser acessada.
+    """
+    if not os.path.isdir(directory_path):
+        logger.info("count_files_between_dates: Pasta não encontrada", directory=directory_path)
+        raise HTTPException(status_code=404, detail="Pasta não encontrada")
 
+    count = 0
     for entry in os.scandir(directory_path):
         if entry.is_file():
-            # Get file creation time
             creation_time = datetime.fromtimestamp(entry.stat().st_ctime)
-
             if start_date <= creation_time <= end_date:
-                result += 1
+                count += 1
+    return count
 
-    return result
 
+def count_files_by_hour(directory_path: str) -> Dict[datetime, int]:
+    """
+    Agrupa arquivos por hora de modificação, retornando um dicionário onde a chave é
+    o início da hora (YYYY-MM-DD HH:00:00) e o valor é a quantidade de arquivos modificados nessa hora.
+    
+    :param directory_path: Caminho da pasta alvo.
+    :return: Dicionário {datetime da hora: quantidade de arquivos}.
+    :raises HTTPException: Se a pasta não existir ou não puder ser acessada.
+    """
+    if not os.path.isdir(directory_path):
+        logger.info("count_files_by_hour: Pasta não encontrada", directory=directory_path)
+        raise HTTPException(status_code=404, detail="Pasta não encontrada")
 
-def count_files_by_hour(directory_path: str) -> dict:
-    file_counts = defaultdict(int)
-
+    file_counts: Dict[datetime, int] = defaultdict(int)
     for entry in os.scandir(directory_path):
         if entry.is_file():
-            # Get the modification time (can also use creation time if you prefer)
             mod_time = datetime.fromtimestamp(entry.stat().st_mtime)
-
-            # Normalize to the start of the hour
             hour_bucket = mod_time.replace(minute=0, second=0, microsecond=0)
-
             file_counts[hour_bucket] += 1
 
     return dict(file_counts)
 
 
-def generate_file_activity_plot_base64(file_activity: dict, style: str = "bar") -> str:
+def generate_file_activity_plot_base64(
+    file_activity: Dict[datetime, int], style: str = "bar"
+) -> str:
+    """
+    Gera um gráfico (PNG) representando atividade de arquivos por hora e retorna
+    a imagem codificada em Base64 (para exibição inline em HTML ou JSON).
+    
+    :param file_activity: Dicionário {datetime da hora: quantidade de arquivos}.
+    :param style: 'bar' ou 'line' para tipo de gráfico. Padrão 'bar'.
+    :return: String Base64 da imagem PNG, ou string vazia se não houver dados.
+    """
     if not file_activity:
         return ""
 
@@ -121,28 +193,22 @@ def generate_file_activity_plot_base64(file_activity: dict, style: str = "bar") 
     counts = [file_activity[t] for t in times]
 
     plt.figure(figsize=(12, 6))
-
-    if style == "bar":
-        plt.bar(times, counts, color='skyblue', edgecolor='black')
+    if style.lower() == "bar":
+        plt.bar(times, counts, edgecolor="black")
     else:
-        plt.plot(times, counts, marker='o', linestyle='-', color='royalblue')
+        plt.plot(times, counts, marker="o", linestyle="-")
 
-    plt.title('Files Modified Per Hour')
-    plt.xlabel('Hour')
-    plt.ylabel('Number of Files')
+    plt.title("Files Modified Per Hour")
+    plt.xlabel("Hour")
+    plt.ylabel("Number of Files")
     plt.grid(True)
     plt.xticks(rotation=45)
     plt.tight_layout()
 
     buf = io.BytesIO()
-    plt.savefig(buf, format='png')
+    plt.savefig(buf, format="png")
     buf.seek(0)
     plt.close()
 
-    img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+    img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
     return img_base64
-
-
-if __name__ == "__main__":
-    pass
-

@@ -1,6 +1,6 @@
 import socket
 import threading
-from singleton import Singleton
+from core.singleton import Singleton
 
 
 class UDPSender(metaclass=Singleton):

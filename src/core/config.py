@@ -1,23 +1,29 @@
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from pydantic import Field
+from typing import Optional
+
 
 class Settings(BaseSettings):
-    MONGO_URI: str = Field(..., env="MONGO_URI")
-    MONGO_DB: str = Field("intel", env="MONGO_DB")
-    JWT_SECRET: str = Field(..., env="JWT_SECRET")
-    JWT_ALGORITHM: str = Field("HS256", env="JWT_ALGORITHM")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(60 * 24, env="ACCESS_TOKEN_EXPIRE_MINUTES")
-    ADMIN_CREATION_TOKEN: str = Field(..., env="ADMIN_CREATION_TOKEN")
-    RATE_LIMIT_PER_DAY: int = Field(5, env="RATE_LIMIT_PER_DAY")
+    BASE_URL: str = Field(..., env="BASE_URL")
+    DIRECTORY: str = Field("data", env="DIRECTORY")
+    UDP_PORT: int = Field(default=7001, env="UDP_PORT")
+    TIMER_TERMS: str = Field(20, env="TIMER_TERMS")
+    COMFYUI_API_SERVER: str = Field(default=None, env="COMFYUI_API_SERVER")
+    IMAGE_TEMP_FOLDER: str = Field(default="static/outputs", env="IMAGE_TEMP_FOLDER")
     REDIS_URL: str = Field(..., env="REDIS_URL")
-    SENTRY_DSN: str = Field(..., env="SENTRY_DSN")
-    AWS_ACCESS_KEY_ID: str = Field(..., env="AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY: str = Field(..., env="AWS_SECRET_ACCESS_KEY") 
-    AWS_REGION: str = Field(..., env="AWS_REGION")
-    S3_BUCKET: str = Field(..., env="S3_BUCKET")
-    LOG_API: str = Field(..., env="LOG_API")
-    LOG_ID: str = Field(..., env="LOG_ID")
+    SENTRY_DSN: Optional[str] = Field(default=None, env="SENTRY_DSN")
+    WORKFLOW_PATH: str = Field(default="workflows/comfyui_basic.json", env="WORKFLOW_PATH")
+    WORKFLOW_NODE_ID_KSAMPLER: str = Field(default="3", env="WORKFLOW_NODE_ID_KSAMPLER")
+    WORKFLOW_NODE_ID_IMAGE_LOAD: str = Field(default="15", env="WORKFLOW_NODE_ID_IMAGE_LOAD")
+    WORKFLOW_NODE_ID_TEXT_INPUT: str = Field(default="18", env="WORKFLOW_NODE_ID_TEXT_INPUT")
+    CONFIG_INDEX: str = Field(default=6, env="CONFIG_INDEX")
+    LOG_API: Optional[str] = Field(default=None, env="LOG_API")
+    LOG_PROJECT_ID: Optional[str] = Field(default=None, env="LOG_PROJECT_ID")
+
+
 
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
 
 settings = Settings()
