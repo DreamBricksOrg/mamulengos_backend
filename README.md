@@ -9,5 +9,5 @@ Escopo inicial conforme backlog:
 ## Como rodar
 ```bash
 pip install -r requirements.txt
-uvicorn src.main:app --reload
+uvicorn main:app --app-dir src--host 0.0.0.0 --port 5000
 ```
