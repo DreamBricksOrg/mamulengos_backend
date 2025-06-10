@@ -13,14 +13,16 @@ from core.config import settings
 from core.udp_sender import UDPSender
 from core.comfyui_api  import ComfyUiAPI
 from utils.log_sender import LogSender
+from utils.files import remove_old_folders
+from utils.worker import worker_loop
 
 from routes.routes import router as rest_router
 from routes.sockets import register_socket_handlers
 
 import os
 import threading
-import shutil
-import time
+import asyncio
+
 
 # ----------------------------
 # Inicializações gerais
@@ -86,35 +88,15 @@ app.include_router(rest_router)
 
 register_socket_handlers(socket_manager)
 
+@app.on_event("startup")
+async def start_worker():
+    """
+    Inicia o worker_loop em paralelo ao servidor.
+    """
+    asyncio.create_task(worker_loop())
+
 # ---------------------------------------------
 # Função periódica para remover pastas antigas
 # ---------------------------------------------
-def remove_old_folders():
-    """
-    A cada execução, verifica em static/download_images subpastas criadas e remove
-    aquelas com mais de 10 minutos.
-    """
-    while True:
-        current_time = time.time()
-        directory = os.path.join(STATIC_DIR, "download_images")
-        minutes = 10
 
-        for foldername in os.listdir(directory):
-            folder_path = os.path.join(directory, foldername)
-            if os.path.isdir(folder_path):
-                creation_time = os.path.getctime(folder_path)
-                if (current_time - creation_time) / 60 > minutes:
-                    shutil.rmtree(folder_path)
-                    log.info(f'Pasta removida por tempo excedido', folder=foldername)
-        time.sleep(60)
-
-# Inicia em background a limpeza periódica
 threading.Thread(target=remove_old_folders, daemon=True).start()
-
-@app.get("/")
-async def root():
-    return RedirectResponse(url="/cta")
-
-@app.get("/alive")
-async def alive():
-    return "Alive"

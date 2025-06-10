@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     CONFIG_INDEX: str = Field(default=6, env="CONFIG_INDEX")
     LOG_API: Optional[str] = Field(default=None, env="LOG_API")
     LOG_PROJECT_ID: Optional[str] = Field(default=None, env="LOG_PROJECT_ID")
-
+    SMS_API_URL: Optional[str] = Field(default=None, env='SMS_API_URL')
+    SMS_API_KEY: Optional[str] = Field(default=None, env='SMS_API_KEY')
 
 
     class Config:
