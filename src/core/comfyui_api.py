@@ -6,16 +6,16 @@ import io
 import copy
 import urllib.request
 import urllib.parse
-
 import requests
 import websocket
-from PIL import Image
 import structlog
+
+from PIL import Image
 
 from core.config import settings
 from utils.files import generate_timestamped_filename
 
-logger = structlog.get_logger()
+log = structlog.get_logger()
 
 
 class ComfyUiAPI:
@@ -130,14 +130,14 @@ class ComfyUiAPI:
                     path = f"{response_data['subfolder']}/{path}"
                 return path
             else:
-                logger.info(
+                log.info(
                     "[Upload Error]",
                     status_code=response.status_code,
                     reason=response.reason,
                 )
                 return None
         except Exception as e:
-            logger.info("[Upload Exception]", error=str(e))
+            log.info("[Upload Exception]", error=str(e))
             return None
 
     def save_image(self, images: dict) -> str:
@@ -207,23 +207,23 @@ class ComfyUiAPI:
         image_file_path = self.save_image(images)
         timing["save"] = datetime.datetime.now()
 
-        logger.info("[Timing Info]")
-        logger.info("Upload time:        %ss", (timing["upload"] - start_time).total_seconds())
-        logger.info(
+        log.info("[Timing Info]")
+        log.info("Upload time:        %ss", (timing["upload"] - start_time).total_seconds())
+        log.info(
             "Execution wait:     %ss",
             (timing["start_execution"] - timing["upload"]).total_seconds(),
         )
-        logger.info(
+        log.info(
             "Processing time:    %ss",
             (timing["execution_done"] - timing["start_execution"]).total_seconds(),
         )
-        logger.info(
+        log.info(
             "Saving time:        %ss",
             (timing["save"] - timing["execution_done"]).total_seconds(),
         )
-        logger.info("Total:              %ss", (timing["save"] - start_time).total_seconds())
+        log.info("Total:              %ss", (timing["save"] - start_time).total_seconds())
 
-        logger.info("[DEBUG] Saved image path: %s", image_file_path)
+        log.info("[DEBUG] Saved image path: %s", image_file_path)
         if not image_file_path:
             raise RuntimeError("Erro: Caminho da imagem gerada está vazio!")
 

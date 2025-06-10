@@ -4,12 +4,12 @@ import json
 import structlog
 
 from typing import Optional, Tuple, Any
-
-from core.config import settings
 from fastapi import HTTPException
 
-logger = structlog.get_logger()
+from core.config import settings
 
+
+log = structlog.get_logger()
 
 def queue_prompt(
     prompt: dict, client_id: str, server_address: Optional[str] = None
@@ -31,7 +31,7 @@ def queue_prompt(
 
     response = requests.post(url, data=data)
     if response.status_code != 200:
-        logger.info(
+        log.info(
             "Falha ao enfileirar prompt",
             status_code=response.status_code,
             response_text=response.text,
@@ -48,13 +48,13 @@ def queue_prompt(
     try:
         prompt_id = response.json().get("prompt_id")
     except ValueError:
-        logger.info("Resposta inválida ao enfileirar prompt", text=response.text)
+        log.info("Resposta inválida ao enfileirar prompt", text=response.text)
         raise HTTPException(
             status_code=502, detail="Resposta inválida do servidor ComfyUI"
         )
 
     if not prompt_id:
-        logger.info("Nenhum prompt_id recebido", text=response.text)
+        log.info("Nenhum prompt_id recebido", text=response.text)
         raise HTTPException(
             status_code=502, detail="Nenhum prompt_id retornado pelo ComfyUI"
         )
@@ -79,10 +79,10 @@ def check_input_image_ready(
 
     response = requests.get(url)
     if response.status_code == 200:
-        logger.info("Imagem de entrada pronta", filename=filename)
+        log.info("Imagem de entrada pronta", filename=filename)
         return True
 
-    logger.info("Imagem de entrada não encontrada, precisa fazer upload", filename=filename)
+    log.info("Imagem de entrada não encontrada, precisa fazer upload", filename=filename)
     return False
 
 
@@ -110,11 +110,11 @@ def upload_image(
 
             response = requests.post(url, files=files, data=data)
     except FileNotFoundError:
-        logger.info("Arquivo de imagem não encontrado para upload", path=image_path)
+        log.info("Arquivo de imagem não encontrado para upload", path=image_path)
         raise HTTPException(status_code=404, detail="Arquivo de imagem não encontrado")
 
     if response.status_code != 200:
-        logger.info(
+        log.info(
             "Erro ao fazer upload da imagem",
             status_code=response.status_code,
             reason=response.reason,
@@ -162,7 +162,7 @@ def get_image(
 
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        logger.info(
+        log.info(
             "Erro ao obter imagem",
             filename=filename,
             status_code=response.status_code,
@@ -197,7 +197,7 @@ D
 
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        logger.info(
+        log.info(
             "Erro ao obter histórico",
             prompt_id=prompt_id,
             status_code=response.status_code,
@@ -224,7 +224,7 @@ def get_queue_status(server_address: Optional[str] = None) -> Any:
 
     response = requests.get(url)
     if response.status_code != 200:
-        logger.info(
+        log.info(
             "Erro ao obter status da fila",
             status_code=response.status_code,
             reason=response.reason,

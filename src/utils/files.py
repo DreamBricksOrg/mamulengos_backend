@@ -2,6 +2,8 @@ import os
 import io
 import zipfile
 import base64
+import shutil
+import time
 import structlog
 
 from datetime import datetime
@@ -11,7 +13,11 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 from fastapi import HTTPException
 
-logger = structlog.get_logger()
+
+log = structlog.get_logger()
+
+BASE_DIR = os.path.dirname(__file__)
+STATIC_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "frontend", "static"))
 
 
 def create_zip_of_images(folder_path: str) -> io.BytesIO:
@@ -23,7 +29,7 @@ def create_zip_of_images(folder_path: str) -> io.BytesIO:
     :raises HTTPException: Se a pasta não existir ou não for acessível.
     """
     if not os.path.isdir(folder_path):
-        logger.info("create_zip_of_images: Pasta não encontrada", folder_path=folder_path)
+        log.info("create_zip_of_images: Pasta não encontrada", folder_path=folder_path)
         raise HTTPException(status_code=404, detail="Pasta não encontrada para criar ZIP")
 
     zip_buffer = io.BytesIO()
@@ -66,7 +72,7 @@ def read_last_n_lines(filename: str, n: int) -> str:
     :raises HTTPException: Se o arquivo não existir ou não puder ser aberto.
     """
     if not os.path.isfile(filename):
-        logger.info("read_last_n_lines: Arquivo não encontrado", filename=filename)
+        log.info("read_last_n_lines: Arquivo não encontrado", filename=filename)
         raise HTTPException(status_code=404, detail="Arquivo não encontrado")
 
     try:
@@ -88,7 +94,7 @@ def read_last_n_lines(filename: str, n: int) -> str:
             last_lines = buffer.splitlines()[-n:]
             return b"\n".join(last_lines).decode("utf-8", errors="replace")
     except Exception as e:
-        logger.info("read_last_n_lines: Erro ao ler arquivo", error=str(e), filename=filename)
+        log.info("read_last_n_lines: Erro ao ler arquivo", error=str(e), filename=filename)
         raise HTTPException(status_code=500, detail="Erro ao ler o arquivo")
 
 
@@ -101,7 +107,7 @@ def count_files_in_directory(directory_path: str) -> int:
     :raises HTTPException: Se a pasta não existir ou não puder ser acessada.
     """
     if not os.path.isdir(directory_path):
-        logger.info("count_files_in_directory: Pasta não encontrada", directory=directory_path)
+        log.info("count_files_in_directory: Pasta não encontrada", directory=directory_path)
         raise HTTPException(status_code=404, detail="Pasta não encontrada")
     return sum(1 for entry in os.scandir(directory_path) if entry.is_file())
 
@@ -116,7 +122,7 @@ def count_files_with_extension(directory_path: str, extension: str) -> int:
     :raises HTTPException: Se a pasta não existir ou não puder ser acessada.
     """
     if not os.path.isdir(directory_path):
-        logger.info("count_files_with_extension: Pasta não encontrada", directory=directory_path)
+        log.info("count_files_with_extension: Pasta não encontrada", directory=directory_path)
         raise HTTPException(status_code=404, detail="Pasta não encontrada")
 
     ext = extension.lower().lstrip(".")
@@ -140,7 +146,7 @@ def count_files_between_dates(
     :raises HTTPException: Se a pasta não existir ou não puder ser acessada.
     """
     if not os.path.isdir(directory_path):
-        logger.info("count_files_between_dates: Pasta não encontrada", directory=directory_path)
+        log.info("count_files_between_dates: Pasta não encontrada", directory=directory_path)
         raise HTTPException(status_code=404, detail="Pasta não encontrada")
 
     count = 0
@@ -162,7 +168,7 @@ def count_files_by_hour(directory_path: str) -> Dict[datetime, int]:
     :raises HTTPException: Se a pasta não existir ou não puder ser acessada.
     """
     if not os.path.isdir(directory_path):
-        logger.info("count_files_by_hour: Pasta não encontrada", directory=directory_path)
+        log.info("count_files_by_hour: Pasta não encontrada", directory=directory_path)
         raise HTTPException(status_code=404, detail="Pasta não encontrada")
 
     file_counts: Dict[datetime, int] = defaultdict(int)
@@ -212,3 +218,22 @@ def generate_file_activity_plot_base64(
 
     img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
     return img_base64
+
+def remove_old_folders():
+    """
+    A cada execução, verifica em static/download_images subpastas criadas e remove
+    aquelas com mais de 10 minutos.
+    """
+    while True:
+        current_time = time.time()
+        directory = os.path.join(STATIC_DIR, "download_images")
+        minutes = 10
+
+        for foldername in os.listdir(directory):
+            folder_path = os.path.join(directory, foldername)
+            if os.path.isdir(folder_path):
+                creation_time = os.path.getctime(folder_path)
+                if (current_time - creation_time) / 60 > minutes:
+                    shutil.rmtree(folder_path)
+                    log.info('Pasta removida por tempo excedido', folder=foldername)
+        time.sleep(60)

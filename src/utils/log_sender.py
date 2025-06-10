@@ -4,9 +4,11 @@ import requests
 import threading
 import os
 import structlog
+
 from datetime import datetime, timezone
 
-logger = structlog.get_logger()
+
+log = structlog.get_logger()
 
 LOG_DIR = os.path.join(os.path.dirname(__file__), '..', 'logs')
 
@@ -29,16 +31,16 @@ class LogSender:
             with open(filename, mode='x', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(['status', 'project', 'additional', 'timePlayed'])
-            logger.info("csv_initialized", file=filename)
+            log.info("csv_initialized", file=filename)
         except FileExistsError:
-            logger.debug("csv_already_exists", file=filename)
+            log.debug("csv_already_exists", file=filename)
 
     def log(self, status, additional=''):
         now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         with open(self.csv_filename, mode='a', newline='') as f:
             writer = csv.writer(f)
             writer.writerow([status, self.project_id, additional, now])
-        logger.info("log_appended", status=status, project=self.project_id, timePlayed=now)
+        log.info("log_appended", status=status, project=self.project_id, timePlayed=now)
 
     def _send_log(self, status, project, additional, timePlayed):
         url = f"{self.log_api}/datalog/upload"
@@ -51,13 +53,13 @@ class LogSender:
         try:
             r = requests.post(url, data=payload)
             if r.status_code == 200:
-                logger.info("log_sent", **payload)
+                log.info("log_sent", **payload)
                 return True
             else:
-                logger.warning("log_send_failed", status_code=r.status_code, **payload)
+                log.warning("log_send_failed", status_code=r.status_code, **payload)
                 return False
         except Exception as e:
-            logger.error("log_send_error", error=str(e), **payload)
+            log.error("log_send_error", error=str(e), **payload)
             return False
 
     def _process_csv_and_send_logs(self):
@@ -80,6 +82,6 @@ class LogSender:
                 writer = csv.DictWriter(f, fieldnames=["status","project","additional","timePlayed"])
                 writer.writerows(backup)
 
-            logger.info("batch_processed", sent=len(backup), kept=len(keep))
+            log.info("batch_processed", sent=len(backup), kept=len(keep))
 
             time.sleep(self.upload_delay)

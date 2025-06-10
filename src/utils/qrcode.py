@@ -1,11 +1,11 @@
 import io
-
 import qrcode
 import structlog
+
 from fastapi import HTTPException
 
-logger = structlog.get_logger()
 
+log = structlog.get_logger()
 
 def generate_qr_code(data: str) -> io.BytesIO:
     """
@@ -41,5 +41,5 @@ def generate_qr_code(data: str) -> io.BytesIO:
         return img_bytes
 
     except Exception as e:
-        logger.info("Erro ao gerar QR code", error=str(e), data=data)
+        log.info("Erro ao gerar QR code", error=str(e), data=data)
         raise HTTPException(status_code=500, detail="Falha ao gerar QR code")
