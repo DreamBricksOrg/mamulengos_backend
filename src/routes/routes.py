@@ -1,6 +1,7 @@
 import structlog
 import uuid
 import os
+import json
 
 from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -43,9 +44,14 @@ async def alive():
     return "Alive"
 
 @router.post("/upload")
-async def upload(file: UploadFile = File(...)):
+async def upload(
+    file: UploadFile = File(...),
+    choice: str = Form("king")
+):
     if file.filename == "":
         raise HTTPException(400, "Nome de arquivo inválido")
+
+    is_king = (choice == "king")
 
     rid = str(uuid.uuid4())
     folder = os.path.join(settings.IMAGE_TEMP_FOLDER, rid)
@@ -54,8 +60,12 @@ async def upload(file: UploadFile = File(...)):
     with open(input_path, "wb") as f:
         f.write(await file.read())
 
-    # enfileira sem telefone ainda
-    await redis.lpush("submissions_queue", json.dumps({"id": rid, "input": input_path}))
+    payload = {
+        "id": rid,
+        "input": input_path,
+        "is_king": is_king
+    }
+    await redis.lpush("submissions_queue", json.dumps(payload))
 
     pos = await redis.llen("submissions_queue")
     avg = float(await redis.get("avg_processing_time") or settings.DEFAULT_PROCESSING_TIME)

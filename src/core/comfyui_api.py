@@ -191,9 +191,9 @@ class ComfyUiAPI:
         )
 
         prompt = copy.deepcopy(self.workflow_template)
-        prompt[self.node_id_ksampler]["inputs"]["seed"] = random.randint(1, 1_000_000_000)
+        # prompt[self.node_id_ksampler]["inputs"]["seed"] = random.randint(1, 1_000_000_000)
         prompt[self.node_id_image_load]["inputs"]["image"] = comfyui_path
-        prompt[self.node_id_text_input]["inputs"]["text"] = input_prompt_text
+        # prompt[self.node_id_text_input]["inputs"]["text"] = input_prompt_text
 
         ws_url = f"ws://{self.server_address}/ws?clientId={client_id}"
         ws = websocket.WebSocket()
