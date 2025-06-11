@@ -149,14 +149,14 @@ class ComfyUiAPI:
             for image_data in image_list:
                 image = Image.open(io.BytesIO(image_data))
                 filename = generate_timestamped_filename(
-                    self.img_temp_folder, prefix="comfy", extension="png"
+                    self.img_temp_folder, prefix="mamulengos", extension="png"
                 )
                 image.save(filename, optimize=True)
                 return filename
 
         raise RuntimeError("Nenhuma imagem encontrada para salvar.")
 
-    def generate_image(self, image_path: str, is_king: bool = True) -> str:
+    def generate_image(self, image_path: str) -> str:
         """
         Fluxo completo para gerar imagem:
         1. Faz upload da imagem de entrada
@@ -175,20 +175,20 @@ class ComfyUiAPI:
         if not comfyui_path:
             raise RuntimeError("Falha ao fazer upload da imagem para ComfyUI.")
 
-        king_prompt = (
-            "king wearing a golden crown, male, 1boy"
-        )
-        queen_prompt = (
-            "queen wearing a golden crown, female, 1girl, woman, diamond earings and necklaces"
-        )
-        gender_prompt = king_prompt if is_king else queen_prompt
+        # king_prompt = (
+        #     "king wearing a golden crown, male, 1boy"
+        # )
+        # queen_prompt = (
+        #     "queen wearing a golden crown, female, 1girl, woman, diamond earings and necklaces"
+        # )
+        # gender_prompt = king_prompt if is_king else queen_prompt
 
-        input_prompt_text = (
-            f"30 years of age, {gender_prompt}, gold and red ornaments, "
-            "european red coat with white fur, renascence, inside a castle, old "
-            "paintings on the walls, large windows with red curtains, blurry background, "
-            "photo, photorealistic, realism"
-        )
+        # input_prompt_text = (
+        #     f"30 years of age, {gender_prompt}, gold and red ornaments, "
+        #     "european red coat with white fur, renascence, inside a castle, old "
+        #     "paintings on the walls, large windows with red curtains, blurry background, "
+        #     "photo, photorealistic, realism"
+        # )
 
         prompt = copy.deepcopy(self.workflow_template)
         # prompt[self.node_id_ksampler]["inputs"]["seed"] = random.randint(1, 1_000_000_000)

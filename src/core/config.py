@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     LOG_PROJECT_ID: Optional[str] = Field(default=None, env="LOG_PROJECT_ID")
     SMS_API_URL: Optional[str] = Field(default=None, env='SMS_API_URL')
     SMS_API_KEY: Optional[str] = Field(default=None, env='SMS_API_KEY')
+    DEFAULT_PROCESSING_TIME: int = Field(8000, env="DEFAULT_PROCESSING_TIME")
 
 
     class Config:

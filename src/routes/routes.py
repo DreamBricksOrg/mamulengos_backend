@@ -12,6 +12,7 @@ from core.config import settings
 from core.comfyui_api import ComfyUiAPI
 from core.redis import redis
 from utils.sms import format_to_e164
+from utils.files import generate_timestamped_filename
 
 
 log = structlog.get_logger()
@@ -45,30 +46,26 @@ async def alive():
 
 @router.post("/upload")
 async def upload(
-    file: UploadFile = File(...),
-    choice: str = Form("king")
+    file: UploadFile = File(...)
 ):
     if file.filename == "":
         raise HTTPException(400, "Nome de arquivo inválido")
 
-    is_king = (choice == "king")
-
     rid = str(uuid.uuid4())
-    folder = os.path.join(settings.IMAGE_TEMP_FOLDER, rid)
-    os.makedirs(folder, exist_ok=True)
-    input_path = os.path.join(folder, "input.png")
-    with open(input_path, "wb") as f:
-        f.write(await file.read())
+
+    filename = generate_timestamped_filename(settings.IMAGE_TEMP_FOLDER, f"mamulengos_in_{rid}", "jpg")
+    input_path = os.path.join(filename)
+
+    file.save(filename)
 
     payload = {
         "id": rid,
-        "input": input_path,
-        "is_king": is_king
+        "input": input_path
     }
     await redis.lpush("submissions_queue", json.dumps(payload))
 
     pos = await redis.llen("submissions_queue")
-    avg = float(await redis.get("avg_processing_time") or settings.DEFAULT_PROCESSING_TIME)
+    avg = float(await redis.get("avg_processing_time"))
     eta = int(pos) * avg
 
     return JSONResponse({
