@@ -3,7 +3,7 @@ import uuid
 import os
 import json
 
-from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Query
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -44,28 +44,29 @@ async def index(request: Request, image_url: str = None):
 async def alive():
     return "Alive"
 
-@router.post("/upload")
+@router.post("/api/upload")
 async def upload(
-    file: UploadFile = File(...)
+    image: UploadFile = File(...)
 ):
-    if file.filename == "":
+    if image.filename == "":
         raise HTTPException(400, "Nome de arquivo inválido")
 
     rid = str(uuid.uuid4())
 
     filename = generate_timestamped_filename(settings.IMAGE_TEMP_FOLDER, f"mamulengos_in_{rid}", "jpg")
-    input_path = os.path.join(filename)
-
-    file.save(filename)
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    content = await image.read()
+    with open(filename, "wb") as f:
+        f.write(content)
 
     payload = {
         "id": rid,
-        "input": input_path
+        "input": filename
     }
     await redis.lpush("submissions_queue", json.dumps(payload))
 
     pos = await redis.llen("submissions_queue")
-    avg = float(await redis.get("avg_processing_time"))
+    avg = float(await redis.get("avg_processing_time") or 80)
     eta = int(pos) * avg
 
     return JSONResponse({
@@ -76,7 +77,37 @@ async def upload(
     })
 
 
-@router.post("/notify")
+@router.get("/api/result")
+async def get_result(request_id: str = Query(...)):
+    key = f"job:{request_id}"
+    exists = await redis.exists(key)
+    if not exists:
+        raise HTTPException(status_code=404, detail="Request ID não encontrado")
+
+    data = await redis.hgetall(key)
+    status = data.get("status")
+
+    if status == "processing":
+        return JSONResponse({"status": "processing"})
+
+    if status == "error":
+        # opcional: envie também a mensagem de erro registrada
+        return JSONResponse({"status": "error", "error": data.get("error")})
+
+    if status == "done":
+        output_path = data.get("output")
+        if not output_path or not os.path.isfile(output_path):
+            raise HTTPException(status_code=500, detail="Imagem processada mas arquivo não encontrado")
+
+        # gera a URL pública; ajuste se servir de outro lugar
+        rel = os.path.relpath(output_path, settings.STATIC_DIR).replace("\\", "/")
+        image_url = f"{settings.BASE_URL}/static/{rel}"
+        return JSONResponse({"status": "done", "image_url": image_url})
+
+    # se ainda não marcou como "processing"/"done"/"error", considera em fila
+    return JSONResponse({"status": "queued"})
+
+@router.post("/api/notify")
 async def register_notification(request_id: str, phone: str):
     # registra telefone para notificação pós-processamento
     if not await redis.exists(f"job:{request_id}"):
