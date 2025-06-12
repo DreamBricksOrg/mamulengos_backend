@@ -5,7 +5,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     BASE_URL: str = Field(..., env="BASE_URL")
-    DIRECTORY: str = Field("data", env="DIRECTORY")
+    STATIC_DIR: str = Field(..., env="STATIC_DIR")
     UDP_PORT: int = Field(default=7001, env="UDP_PORT")
     TIMER_TERMS: str = Field(20, env="TIMER_TERMS")
     COMFYUI_API_SERVER: str = Field(default=None, env="COMFYUI_API_SERVER")
