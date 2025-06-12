@@ -93,6 +93,7 @@ async def start_worker():
     """
     Inicia o worker_loop em paralelo ao servidor.
     """
+    log.info("worker.startup")
     asyncio.create_task(worker_loop())
 
 # ---------------------------------------------

@@ -13,6 +13,7 @@ from core.comfyui_api import ComfyUiAPI
 from core.redis import redis
 from utils.sms import format_to_e164
 from utils.files import generate_timestamped_filename
+from utils.sms import send_sms_download_message
 
 
 log = structlog.get_logger()
@@ -91,7 +92,6 @@ async def get_result(request_id: str = Query(...)):
         return JSONResponse({"status": "processing"})
 
     if status == "error":
-        # opcional: envie também a mensagem de erro registrada
         return JSONResponse({"status": "error", "error": data.get("error")})
 
     if status == "done":
@@ -109,11 +109,23 @@ async def get_result(request_id: str = Query(...)):
 
 @router.post("/api/notify")
 async def register_notification(request_id: str, phone: str):
-    # registra telefone para notificação pós-processamento
-    if not await redis.exists(f"job:{request_id}"):
+    key = f"job:{request_id}"
+    if not await redis.exists(key):
         raise HTTPException(404, "Request ID não encontrado")
-    await redis.hset(f"job:{request_id}", "phone", format_to_e164(phone))
+
+    formatted = format_to_e164(phone)
+    await redis.hset(key, "phone", formatted)
+
+    # se o job já estiver `done`, dispare o SMS imediatamente
+    data = await redis.hgetall(key)
+    if data.get("status") == "done":
+        link = f"{settings.BASE_URL}/api/result?request_id={request_id}"
+        sent = send_sms_download_message(link, formatted)
+        log.info("notify.immediate_sms", request_id=request_id, phone=formatted, success=sent)
+        await redis.hset(key, "sms_status", "sent" if sent else "failed")
+
     return JSONResponse({"status": "PHONE_REGISTERED"})
+
 
 
 @router.get("/error")

@@ -5,7 +5,7 @@ import structlog
 from core.config import settings
 from core.comfyui_api import ComfyUiAPI
 from core.redis import redis
-from utils.sms import send_sms_message
+from utils.sms import send_sms_download_message
 
 
 log = structlog.get_logger()
@@ -62,7 +62,7 @@ async def worker_loop():
         phone = await redis.hget(f"job:{rid}", "phone")
         if phone:
             link = f"{settings.BASE_URL}/result/{rid}"
-            sent = send_sms_message(link, phone)
+            sent = send_sms_download_message(link, phone)
             log.info("worker.sms_sent", request_id=rid, phone=phone, success=sent)
         else:
             log.info("worker.no_phone", request_id=rid)
