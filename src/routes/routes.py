@@ -6,6 +6,7 @@ import json
 from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Query
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi import BackgroundTasks
 
 from core.config import settings
 
@@ -33,6 +34,10 @@ api = ComfyUiAPI(
     settings.WORKFLOW_NODE_ID_TEXT_INPUT,
 )
 
+async def enqueue_job(rid: str, input_path: str):
+    payload = {"id": rid, "input": input_path}
+    # só o lpush e nada mais
+    await redis.lpush("submissions_queue", json.dumps(payload))
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request, image_url: str = None):
@@ -47,6 +52,7 @@ async def alive():
 
 @router.post("/api/upload")
 async def upload(
+    background_tasks: BackgroundTasks,
     image: UploadFile = File(...)
 ):
     if image.filename == "":
@@ -60,11 +66,7 @@ async def upload(
     with open(filename, "wb") as f:
         f.write(content)
 
-    payload = {
-        "id": rid,
-        "input": filename
-    }
-    await redis.lpush("submissions_queue", json.dumps(payload))
+    background_tasks.add_task(enqueue_job, rid, filename)
 
     pos = await redis.llen("submissions_queue")
     avg = float(await redis.get("avg_processing_time") or 80)

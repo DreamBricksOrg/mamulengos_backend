@@ -23,6 +23,9 @@ RUN pip install --upgrade pip && \
 # Copia todo o código do projeto para /app
 COPY . .
 
+# Garante que a pasta de outputs existe
+RUN mkdir -p src/frontend/static/outputs
+
 # Expõe a porta usada pelo Uvicorn
 EXPOSE 5000
 
