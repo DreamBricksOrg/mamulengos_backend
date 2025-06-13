@@ -2,6 +2,7 @@ import os
 import json
 import time
 import structlog
+import tempfile
 from io import BytesIO
 
 from core.config import settings
@@ -44,9 +45,13 @@ async def worker_loop():
         body = obj["Body"].read()
         bio = BytesIO(body)
 
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            tmp.write(body)
+            tmp_path = tmp.name
+
         start = time.time()
         try:
-            out = api.generate_image_buffer(bio)
+            out = api.generate_image(tmp_path)
         except Exception as e:
             log.error("worker.generate_error", request_id=rid, error=str(e))
             await redis.hset(f"job:{rid}", mapping={"status":"error", "error":str(e)})
@@ -59,6 +64,7 @@ async def worker_loop():
         log.info("worker.uploaded_s3", request_id=rid, s3_key=s3_key)
 
         try:
+            os.remove(tmp_path)
             os.remove(out)
         except Exception:
             pass
