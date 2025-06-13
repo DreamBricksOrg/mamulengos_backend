@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     SMS_API_URL: Optional[str] = Field(default=None, env='SMS_API_URL')
     SMS_API_KEY: Optional[str] = Field(default=None, env='SMS_API_KEY')
     DEFAULT_PROCESSING_TIME: int = Field(8000, env="DEFAULT_PROCESSING_TIME")
+    AWS_REGION: str = Field(..., env="AWS_REGION")
+    S3_BUCKET: str = Field(..., env="S3_BUCKET")
 
 
     class Config:

@@ -1,3 +1,5 @@
+import io
+import os
 import json
 import time
 import structlog
@@ -6,6 +8,7 @@ from core.config import settings
 from core.comfyui_api import ComfyUiAPI
 from core.redis import redis
 from utils.sms import send_sms_download_message
+from utils.s3 import upload_fileobj, public_url, create_presigned_download
 
 
 log = structlog.get_logger()
@@ -42,9 +45,19 @@ async def worker_loop():
             out = api.generate_image(inp)
         except Exception as e:
             log.error("worker.generate_error", request_id=rid, error=str(e))
-            # opcional: marque status de erro
             await redis.hset(f"job:{rid}", mapping={"status":"error", "error":str(e)})
             continue
+
+        with open(out, "rb") as f:
+            s3_key = upload_fileobj(f, key_prefix=f"output/{rid}")
+        # image_url = public_url(s3_key)
+        image_url = create_presigned_download(s3_key, expires_in=3600)
+        log.info("worker.uploaded_s3", request_id=rid, s3_key=s3_key)
+
+        try:
+            os.remove(out)
+        except Exception:
+            pass
 
         duration = time.time() - start
         log.info("worker.job_done", request_id=rid, duration=duration)
@@ -56,13 +69,14 @@ async def worker_loop():
         log.info("worker.avg_updated", new_avg=new_avg)
 
         # grava resultado
-        await redis.hset(f"job:{rid}", mapping={"status":"done", "output":out})
+        await redis.hset(f"job:{rid}", mapping={"status":"done", "output":image_url})
+        log.info("worker.job_finished", request_id=rid, image_url=image_url)
 
         # notifica por SMS se tiver número
         phone = await redis.hget(f"job:{rid}", "phone")
         if phone:
-            link = f"{settings.BASE_URL}/result/{rid}"
-            sent = send_sms_download_message(link, phone)
+            sent = send_sms_download_message(image_url, phone)
             log.info("worker.sms_sent", request_id=rid, phone=phone, success=sent)
+            await redis.hset(f"job:{rid}", "sms_status", "sent" if sent else "failed")
         else:
             log.info("worker.no_phone", request_id=rid)

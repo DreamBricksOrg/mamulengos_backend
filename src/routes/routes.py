@@ -10,33 +10,20 @@ from fastapi import BackgroundTasks
 
 from core.config import settings
 
-from core.comfyui_api import ComfyUiAPI
 from core.redis import redis
-from utils.sms import format_to_e164
+from utils.sms import format_to_e164, send_sms_download_message
 from utils.files import generate_timestamped_filename
-from utils.sms import send_sms_download_message
 
-
-log = structlog.get_logger()
 
 router = APIRouter()
+log = structlog.get_logger()
+
 BASE_DIR = os.path.dirname(__file__) 
 TEMPLATES_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "frontend", "templates"))
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
-UPLOAD_FOLDER = settings.IMAGE_TEMP_FOLDER
-
-api = ComfyUiAPI(
-    settings.COMFYUI_API_SERVER,
-    UPLOAD_FOLDER,
-    settings.WORKFLOW_PATH,
-    settings.WORKFLOW_NODE_ID_KSAMPLER,
-    settings.WORKFLOW_NODE_ID_IMAGE_LOAD,
-    settings.WORKFLOW_NODE_ID_TEXT_INPUT,
-)
 
 async def enqueue_job(rid: str, input_path: str):
     payload = {"id": rid, "input": input_path}
-    # só o lpush e nada mais
     await redis.lpush("submissions_queue", json.dumps(payload))
 
 @router.get("/", response_class=HTMLResponse)
@@ -97,13 +84,9 @@ async def get_result(request_id: str = Query(...)):
         return JSONResponse({"status": "error", "error": data.get("error")})
 
     if status == "done":
-        output_path = data.get("output")
-        if not output_path or not os.path.isfile(output_path):
+        image_url = data.get("output")
+        if not image_url:
             raise HTTPException(status_code=500, detail="Imagem processada mas arquivo não encontrado")
-
-        # gera a URL pública; ajuste se servir de outro lugar
-        rel = os.path.relpath(output_path, settings.STATIC_DIR).replace("\\", "/")
-        image_url = f"{settings.BASE_URL}/static/{rel}"
         return JSONResponse({"status": "done", "image_url": image_url})
 
     # se ainda não marcou como "processing"/"done"/"error", considera em fila
@@ -121,13 +104,12 @@ async def register_notification(request_id: str, phone: str):
     # se o job já estiver `done`, dispare o SMS imediatamente
     data = await redis.hgetall(key)
     if data.get("status") == "done":
-        link = f"{settings.BASE_URL}/api/result?request_id={request_id}"
-        sent = send_sms_download_message(link, formatted)
+        image_url = data.get("output")
+        sent = send_sms_download_message(image_url, formatted)
         log.info("notify.immediate_sms", request_id=request_id, phone=formatted, success=sent)
         await redis.hset(key, "sms_status", "sent" if sent else "failed")
 
     return JSONResponse({"status": "PHONE_REGISTERED"})
-
 
 
 @router.get("/error")

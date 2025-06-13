@@ -1,32 +1,21 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import RedirectResponse, StreamingResponse, JSONResponse
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_socketio import SocketManager
 
 import structlog
 from sentry_sdk import init as sentry_init
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from core.config import settings
-from core.udp_sender import UDPSender
-from core.comfyui_api  import ComfyUiAPI
 from utils.log_sender import LogSender
-from utils.files import remove_old_folders
 from utils.worker import worker_loop
 
 from routes.routes import router as rest_router
-from routes.sockets import register_socket_handlers
 
 import os
-import threading
 import asyncio
 
-
-# ----------------------------
-# Inicializações gerais
-# ----------------------------
 
 BASE_DIR = os.path.dirname(__file__)
 STATIC_DIR = os.path.join(BASE_DIR, "frontend/static")
@@ -71,22 +60,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
-socket_manager = SocketManager(app=app, async_mode="asgi")
-app.state.socket_manager = socket_manager
-
-udp_sender = UDPSender(port=settings.UDP_PORT)
-ss_api = ComfyUiAPI(
-    settings.COMFYUI_API_SERVER,
-    settings.IMAGE_TEMP_FOLDER,
-    settings.WORKFLOW_PATH,
-    settings.WORKFLOW_NODE_ID_KSAMPLER,
-    settings.WORKFLOW_NODE_ID_IMAGE_LOAD,
-    settings.WORKFLOW_NODE_ID_TEXT_INPUT
-)
-
 app.include_router(rest_router)
-
-register_socket_handlers(socket_manager)
 
 @app.on_event("startup")
 async def start_worker():
@@ -95,9 +69,3 @@ async def start_worker():
     """
     log.info("worker.startup")
     asyncio.create_task(worker_loop())
-
-# ---------------------------------------------
-# Função periódica para remover pastas antigas
-# ---------------------------------------------
-
-threading.Thread(target=remove_old_folders, daemon=True).start()
