@@ -54,8 +54,8 @@
   "3000": {
     "inputs": {
       "lora_name": "mamulengo_03-000006.safetensors",
-      "strength_model": 1.0000000000000002,
-      "strength_clip": 0.9800000000000002,
+      "strength_model": 1.2500000000000002,
+      "strength_clip": 1.2500000000000002,
       "model": [
         "3057",
         0
@@ -81,12 +81,12 @@
   },
   "3002": {
     "inputs": {
-      "seed": 11,
-      "steps": 30,
+      "seed": 10,
+      "steps": 20,
       "cfg": 1.5,
       "sampler_name": "dpmpp_2m",
       "scheduler": "karras",
-      "denoise": 0.8000000000000002,
+      "denoise": 0.7500000000000001,
       "model": [
         "3000",
         0
@@ -161,184 +161,11 @@
   },
   "3023": {
     "inputs": {
-      "image": "WhatsApp Image 2025-06-04 at 16.52.49.jpeg"
+      "image": "mamulengos_in_e532c3fb-d283-454c-8d1b-1808d9ee5506_20250612_180709.jpg"
     },
     "class_type": "LoadImage",
     "_meta": {
       "title": "Load Image"
-    }
-  },
-  "3031": {
-    "inputs": {
-      "text": [
-        "3068",
-        0
-      ],
-      "speak_and_recognation": {
-        "__value__": [
-          false,
-          true
-        ]
-      },
-      "clip": [
-        "3057",
-        1
-      ]
-    },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP Text Encode (Prompt)"
-    }
-  },
-  "3032": {
-    "inputs": {
-      "text": "blurry, noisy, messy, glitch, distorted, malformed, ill, horror, naked, nipples",
-      "speak_and_recognation": {
-        "__value__": [
-          false,
-          true
-        ]
-      },
-      "clip": [
-        "3057",
-        1
-      ]
-    },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP Text Encode (Prompt)"
-    }
-  },
-  "3033": {
-    "inputs": {
-      "preset": "VIT-G (medium strength)",
-      "model": [
-        "3057",
-        0
-      ]
-    },
-    "class_type": "IPAdapterUnifiedLoader",
-    "_meta": {
-      "title": "IPAdapter Unified Loader"
-    }
-  },
-  "3034": {
-    "inputs": {
-      "lora_name": "mamulengo_03-000006.safetensors",
-      "strength_model": 0.9900000000000002,
-      "strength_clip": 1.0000000000000002,
-      "model": [
-        "3049",
-        0
-      ],
-      "clip": [
-        "3057",
-        1
-      ]
-    },
-    "class_type": "LoraLoader",
-    "_meta": {
-      "title": "Load LoRA"
-    }
-  },
-  "3035": {
-    "inputs": {
-      "seed": 20,
-      "steps": 35,
-      "cfg": 1.8800000000000001,
-      "sampler_name": "dpmpp_2m",
-      "scheduler": "karras",
-      "denoise": 0.4000000000000001,
-      "model": [
-        "3034",
-        0
-      ],
-      "positive": [
-        "3039",
-        0
-      ],
-      "negative": [
-        "3039",
-        1
-      ],
-      "latent_image": [
-        "3036",
-        0
-      ]
-    },
-    "class_type": "KSampler",
-    "_meta": {
-      "title": "KSampler"
-    }
-  },
-  "3036": {
-    "inputs": {
-      "pixels": [
-        "3037",
-        0
-      ],
-      "vae": [
-        "3057",
-        2
-      ]
-    },
-    "class_type": "VAEEncode",
-    "_meta": {
-      "title": "VAE Encode"
-    }
-  },
-  "3037": {
-    "inputs": {
-      "width": 960,
-      "height": 0,
-      "interpolation": "nearest",
-      "method": "keep proportion",
-      "condition": "always",
-      "multiple_of": 0,
-      "image": [
-        "3092",
-        0
-      ]
-    },
-    "class_type": "ImageResize+",
-    "_meta": {
-      "title": "🔧 Image Resize"
-    }
-  },
-  "3038": {
-    "inputs": {
-      "control_net_name": "diffusers_xl_depth_full.safetensors"
-    },
-    "class_type": "ControlNetLoader",
-    "_meta": {
-      "title": "Load ControlNet Model"
-    }
-  },
-  "3039": {
-    "inputs": {
-      "strength": 1,
-      "start_percent": 0,
-      "end_percent": 0.3,
-      "positive": [
-        "3050",
-        0
-      ],
-      "negative": [
-        "3050",
-        1
-      ],
-      "control_net": [
-        "3038",
-        0
-      ],
-      "image": [
-        "3052",
-        0
-      ]
-    },
-    "class_type": "ControlNetApplyAdvanced",
-    "_meta": {
-      "title": "Apply ControlNet"
     }
   },
   "3040": {
@@ -357,7 +184,7 @@
   "3042": {
     "inputs": {
       "area": "face+forehead (if available)",
-      "grow": 0,
+      "grow": 10,
       "grow_tapered": false,
       "blur": 13,
       "analysis_models": [
@@ -396,7 +223,7 @@
       "num_beams": 3,
       "do_sample": true,
       "output_mask_select": "",
-      "seed": 321151899013161,
+      "seed": 433524983513240,
       "speak_and_recognation": {
         "__value__": [
           false,
@@ -419,7 +246,7 @@
   },
   "3045": {
     "inputs": {
-      "PreviewTextNode_1": "The image is a close-up portrait of a man's face. He appears to be in his late 40s or early 50s, with dark hair and a beard. He has a slight smile on his lips and is looking directly at the camera. His eyes are slightly squinted and his eyebrows are slightly furrowed. He is wearing a black collared shirt. The background is a plain white wall.",
+      "PreviewTextNode_1": "The image is a close-up portrait of a young woman's face. She has long dark hair that is styled in loose waves and falls over her shoulders. Her makeup is natural-looking with a subtle smokey eye makeup look. Her eyebrows are perfectly groomed and filled in with a light pink shade. Her lips are painted a soft pink color and her cheeks are contoured. She is looking directly at the camera with a neutral expression. The background is blurred, so the focus is on her face.",
       "speak_and_recognation": {
         "__value__": [
           false,
@@ -444,117 +271,6 @@
     "class_type": "FaceAnalysisModels",
     "_meta": {
       "title": "Face Analysis Models"
-    }
-  },
-  "3047": {
-    "inputs": {
-      "low_threshold": 0.07,
-      "high_threshold": 0.31000000000000005,
-      "image": [
-        "3037",
-        0
-      ]
-    },
-    "class_type": "Canny",
-    "_meta": {
-      "title": "Canny"
-    }
-  },
-  "3049": {
-    "inputs": {
-      "weight_style": 1.3000000000000003,
-      "weight_composition": 1,
-      "expand_style": false,
-      "combine_embeds": "average",
-      "start_at": 0,
-      "end_at": 1,
-      "embeds_scaling": "V only",
-      "model": [
-        "3033",
-        0
-      ],
-      "ipadapter": [
-        "3033",
-        1
-      ],
-      "image_style": [
-        "3003",
-        0
-      ],
-      "image_composition": [
-        "3092",
-        0
-      ]
-    },
-    "class_type": "IPAdapterStyleComposition",
-    "_meta": {
-      "title": "IPAdapter Style & Composition SDXL"
-    }
-  },
-  "3050": {
-    "inputs": {
-      "strength": 0.6200000000000001,
-      "start_percent": 0,
-      "end_percent": 0.75,
-      "positive": [
-        "3031",
-        0
-      ],
-      "negative": [
-        "3032",
-        0
-      ],
-      "control_net": [
-        "3051",
-        0
-      ],
-      "image": [
-        "3047",
-        0
-      ]
-    },
-    "class_type": "ControlNetApplyAdvanced",
-    "_meta": {
-      "title": "Apply ControlNet"
-    }
-  },
-  "3051": {
-    "inputs": {
-      "control_net_name": "controlnetxlCNXL_saiCanny.safetensors"
-    },
-    "class_type": "ControlNetLoader",
-    "_meta": {
-      "title": "Load ControlNet Model"
-    }
-  },
-  "3052": {
-    "inputs": {
-      "ckpt_name": "depth_anything_vitl14.pth",
-      "resolution": 960,
-      "image": [
-        "3037",
-        0
-      ]
-    },
-    "class_type": "DepthAnythingPreprocessor",
-    "_meta": {
-      "title": "Depth Anything"
-    }
-  },
-  "3054": {
-    "inputs": {
-      "samples": [
-        "3035",
-        0
-      ],
-      "vae": [
-        "3057",
-        2
-      ]
-    },
-    "class_type": "VAEDecode",
-    "_meta": {
-      "title": "VAE Decode"
     }
   },
   "3057": {
@@ -588,7 +304,7 @@
   },
   "3064": {
     "inputs": {
-      "PreviewTextNode_0": "mamu13n60 stop motion character, stop motion character, animation, cartoon, disney, full body\n\nThe image is a close-up portrait of a man's face. He appears to be in his late 40s or early 50s, with dark hair and a beard. He has a slight smile on his lips and is looking directly at the camera. His eyes are slightly squinted and his eyebrows are slightly furrowed. He is wearing a black collared shirt. The background is a plain white wall.\n\nclassic straw hat, colorful and festive",
+      "PreviewTextNode_0": "mamu13n60 stop motion character, stop motion character, animation, cartoon, disney, full body\n\nThe image is a close-up portrait of a young woman's face. She has long dark hair that is styled in loose waves and falls over her shoulders. Her makeup is natural-looking with a subtle smokey eye makeup look. Her eyebrows are perfectly groomed and filled in with a light pink shade. Her lips are painted a soft pink color and her cheeks are contoured. She is looking directly at the camera with a neutral expression. The background is blurred, so the focus is on her face.\n\nclassic straw hat, colorful and festive",
       "speak_and_recognation": {
         "__value__": [
           false,
@@ -625,72 +341,13 @@
       "title": "Concatenate"
     }
   },
-  "3067": {
-    "inputs": {
-      "string_a": "mamu13n60 stop motion character, open eyes\n\n",
-      "string_b": [
-        "3045",
-        0
-      ],
-      "delimiter": "",
-      "speak_and_recognation": {
-        "__value__": [
-          false,
-          true
-        ]
-      }
-    },
-    "class_type": "StringConcatenate",
-    "_meta": {
-      "title": "Concatenate"
-    }
-  },
-  "3068": {
-    "inputs": {
-      "string_a": [
-        "3067",
-        0
-      ],
-      "string_b": "\nA cute handmade rag doll in Brazilian Festa Junina style, plaid shirt with patches, straw hat, soft face fabric, button eyes, colorful and festive.\n\ndetailed, high quality",
-      "delimiter": "",
-      "speak_and_recognation": {
-        "__value__": [
-          false,
-          true
-        ]
-      }
-    },
-    "class_type": "StringConcatenate",
-    "_meta": {
-      "title": "Concatenate"
-    }
-  },
-  "3069": {
-    "inputs": {
-      "PreviewTextNode_2": "mamu13n60 stop motion character, open eyes\n\nThe image is a close-up portrait of a man's face. He appears to be in his late 40s or early 50s, with dark hair and a beard. He has a slight smile on his lips and is looking directly at the camera. His eyes are slightly squinted and his eyebrows are slightly furrowed. He is wearing a black collared shirt. The background is a plain white wall.\nA cute handmade rag doll in Brazilian Festa Junina style, plaid shirt with patches, straw hat, soft face fabric, button eyes, colorful and festive.\n\ndetailed, high quality",
-      "speak_and_recognation": {
-        "__value__": [
-          false,
-          true
-        ]
-      },
-      "text": [
-        "3068",
-        0
-      ]
-    },
-    "class_type": "PreviewTextNode",
-    "_meta": {
-      "title": "Preview Text Node"
-    }
-  },
   "3071": {
     "inputs": {
       "width": 960,
       "height": 0,
       "interpolation": "nearest",
       "method": "keep proportion",
-      "condition": "downscale if bigger",
+      "condition": "always",
       "multiple_of": 0,
       "image": [
         "3023",
@@ -724,7 +381,7 @@
   },
   "3076": {
     "inputs": {
-      "preview": "0",
+      "preview": "1",
       "source": [
         "3087",
         0
@@ -838,8 +495,8 @@
   "3094": {
     "inputs": {
       "seed": 10,
-      "steps": 30,
-      "cfg": 1.6,
+      "steps": 25,
+      "cfg": 2.5,
       "sampler_name": "ddpm",
       "scheduler": "karras",
       "denoise": 1,
@@ -869,7 +526,7 @@
     "inputs": {
       "instantid_file": "instantid-ip-adapter.bin",
       "insightface": "CPU",
-      "weight": 0.9000000000000001,
+      "weight": 1.0000000000000002,
       "start_at": 0,
       "end_at": 1,
       "blur_kernel": 51,
@@ -890,7 +547,7 @@
         2
       ],
       "image_source": [
-        "3097",
+        "3126",
         0
       ],
       "image_face": [
@@ -898,7 +555,7 @@
         0
       ],
       "mask": [
-        "3098",
+        "3132",
         0
       ]
     },
@@ -1113,7 +770,7 @@
   },
   "3117": {
     "inputs": {
-      "strength": 0.33000000000000007,
+      "strength": 0.4100000000000001,
       "start_percent": 0,
       "end_percent": 1,
       "control_net": [
@@ -1135,11 +792,11 @@
       "input_mode": "simple",
       "lora_count": 2,
       "lora_name_1": "mamulengo_03-000006.safetensors",
-      "lora_wt_1": 0.9800000000000002,
+      "lora_wt_1": 0.9500000000000002,
       "model_str_1": 1,
       "clip_str_1": 1,
       "lora_name_2": "ClayAnimationRedm.safetensors",
-      "lora_wt_2": 0.6400000000000001,
+      "lora_wt_2": 0.9000000000000001,
       "model_str_2": 1,
       "clip_str_2": 1,
       "lora_name_3": "None",
@@ -1189,12 +846,12 @@
   },
   "3121": {
     "inputs": {
-      "seed": 367262044792294,
-      "steps": 25,
-      "cfg": 1.5,
+      "seed": 609491004933828,
+      "steps": 20,
+      "cfg": 1.9000000000000001,
       "sampler_name": "dpmpp_2m_sde",
       "scheduler": "karras",
-      "denoise": 0.9100000000000001,
+      "denoise": 0.8000000000000002,
       "preview_method": "none",
       "vae_decode": "true",
       "model": [
@@ -1241,20 +898,6 @@
       "title": "🔧 Image Resize"
     }
   },
-  "3129": {
-    "inputs": {
-      "width": 512,
-      "height": 0,
-      "interpolation": "nearest",
-      "method": "keep proportion",
-      "condition": "always",
-      "multiple_of": 0
-    },
-    "class_type": "ImageResize+",
-    "_meta": {
-      "title": "🔧 Image Resize"
-    }
-  },
   "3130": {
     "inputs": {
       "image": "clipspace/clipspace-mask-24787132.4.png [input]"
@@ -1271,6 +914,26 @@
     "class_type": "LoadImage",
     "_meta": {
       "title": "Load Image"
+    }
+  },
+  "3132": {
+    "inputs": {
+      "area": "face+forehead (if available)",
+      "grow": 0,
+      "grow_tapered": false,
+      "blur": 13,
+      "analysis_models": [
+        "3046",
+        0
+      ],
+      "image": [
+        "3126",
+        0
+      ]
+    },
+    "class_type": "FaceSegmentation",
+    "_meta": {
+      "title": "Face Segmentation"
     }
   }
 }
