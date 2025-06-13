@@ -252,3 +252,55 @@ class ComfyUiAPI:
         composite.paste(watermark, position, watermark)
 
         composite.convert("RGB").save(base_image_path, "PNG")
+
+    def generate_image_buffer(self, file_obj) -> str:
+        """
+        Fluxo completo para gerar imagem a partir de um file-like:
+        1. Faz upload da imagem de entrada (BytesIO ou similar)
+        2. Constrói o prompt a partir do template
+        3. Abre WebSocket e aguarda término da execução
+        4. Salva a primeira imagem retornada e retorna o caminho salvo
+        """
+        timing = {}
+        client_id = str(uuid.uuid4())
+        start_time = datetime.datetime.now()
+
+        # upload usando o file-like em memória
+        comfyui_path = self.upload_file(file_obj, subfolder="", overwrite=True)
+        timing["upload"] = datetime.datetime.now()
+
+        if not comfyui_path:
+            raise RuntimeError("Falha ao fazer upload da imagem para ComfyUI.")
+
+        # monta o prompt
+        prompt = copy.deepcopy(self.workflow_template)
+        prompt[self.node_id_image_load]["inputs"]["image"] = comfyui_path
+
+        # conecta WebSocket com o client_id correto
+        ws_url = f"ws://{self.server_address}/ws?clientId={client_id}"
+        ws = websocket.WebSocket()
+        ws.connect(ws_url)
+        timing["start_execution"] = datetime.datetime.now()
+
+        # aguarda execução e coleta imagens
+        images = self.get_images(ws, prompt, client_id)
+        timing["execution_done"] = datetime.datetime.now()
+        ws.close()
+
+        # salva a imagem resultante em disco
+        image_file_path = self.save_image(images)
+        timing["save"] = datetime.datetime.now()
+
+        # logs de timing
+        log.info("[Timing Info]")
+        log.info("Upload time:        %ss", (timing["upload"] - start_time).total_seconds())
+        log.info("Execution wait:     %ss", (timing["start_execution"] - timing["upload"]).total_seconds())
+        log.info("Processing time:    %ss", (timing["execution_done"] - timing["start_execution"]).total_seconds())
+        log.info("Saving time:        %ss", (timing["save"] - timing["execution_done"]).total_seconds())
+        log.info("Total:              %ss", (timing["save"] - start_time).total_seconds())
+
+        log.info("[DEBUG] Saved image path: %s", image_file_path)
+        if not image_file_path:
+            raise RuntimeError("Erro: Caminho da imagem gerada está vazio!")
+
+        return image_file_path

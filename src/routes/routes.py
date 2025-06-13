@@ -2,6 +2,8 @@ import structlog
 import uuid
 import os
 import json
+from io import BytesIO
+
 
 from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Query
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -12,7 +14,7 @@ from core.config import settings
 
 from core.redis import redis
 from utils.sms import format_to_e164, send_sms_download_message
-from utils.files import generate_timestamped_filename
+from utils.s3 import upload_fileobj
 
 
 router = APIRouter()
@@ -47,13 +49,11 @@ async def upload(
 
     rid = str(uuid.uuid4())
 
-    filename = generate_timestamped_filename(settings.IMAGE_TEMP_FOLDER, f"mamulengos_in_{rid}", "jpg")
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
     content = await image.read()
-    with open(filename, "wb") as f:
-        f.write(content)
+    bio = BytesIO(content)
+    input_key = upload_fileobj(bio, key_prefix=f"input/{rid}")
 
-    background_tasks.add_task(enqueue_job, rid, filename)
+    background_tasks.add_task(enqueue_job, rid, input_key)
 
     pos = await redis.llen("submissions_queue")
     avg = float(await redis.get("avg_processing_time") or 80)

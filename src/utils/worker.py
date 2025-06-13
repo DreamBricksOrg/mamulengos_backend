@@ -1,14 +1,14 @@
-import io
 import os
 import json
 import time
 import structlog
+from io import BytesIO
 
 from core.config import settings
 from core.comfyui_api import ComfyUiAPI
 from core.redis import redis
 from utils.sms import send_sms_download_message
-from utils.s3 import upload_fileobj, public_url, create_presigned_download
+from utils.s3 import upload_fileobj, s3_client, create_presigned_download
 
 
 log = structlog.get_logger()
@@ -40,9 +40,13 @@ async def worker_loop():
         # marca como processing
         await redis.hset(f"job:{rid}", mapping={"status":"processing", "input":inp})
 
+        obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=inp)
+        body = obj["Body"].read()
+        bio = BytesIO(body)
+
         start = time.time()
         try:
-            out = api.generate_image(inp)
+            out = api.generate_image_buffer(bio)
         except Exception as e:
             log.error("worker.generate_error", request_id=rid, error=str(e))
             await redis.hset(f"job:{rid}", mapping={"status":"error", "error":str(e)})
