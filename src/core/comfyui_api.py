@@ -253,6 +253,19 @@ class ComfyUiAPI:
 
         composite.convert("RGB").save(base_image_path, "PNG")
 
+    def save_image_buffer(self, images: dict) -> io.BytesIO:
+        """
+        Recebe imagens em bytes e retorna um BytesIO com a primeira imagem em PNG.
+        """
+        for node_id, img_list in images.items():
+            for img_bytes in img_list:
+                img = Image.open(io.BytesIO(img_bytes))
+                buf = io.BytesIO()
+                img.save(buf, format="PNG", optimize=True)
+                buf.seek(0)
+                return buf
+        raise RuntimeError("Nenhuma imagem encontrada para salvar.")
+
     def generate_image_buffer(self, file_obj) -> str:
         """
         Fluxo completo para gerar imagem a partir de um file-like:
@@ -288,7 +301,7 @@ class ComfyUiAPI:
         ws.close()
 
         # salva a imagem resultante em disco
-        image_file_path = self.save_image(images)
+        buf = self.save_image_buffer(images)
         timing["save"] = datetime.datetime.now()
 
         # logs de timing
@@ -299,8 +312,8 @@ class ComfyUiAPI:
         log.info("Saving time:        %ss", (timing["save"] - timing["execution_done"]).total_seconds())
         log.info("Total:              %ss", (timing["save"] - start_time).total_seconds())
 
-        log.info("[DEBUG] Saved image path: %s", image_file_path)
-        if not image_file_path:
+        log.info("[DEBUG] Saved image file buffering: %s", buf)
+        if not buf:
             raise RuntimeError("Erro: Caminho da imagem gerada está vazio!")
 
-        return image_file_path
+        return buf

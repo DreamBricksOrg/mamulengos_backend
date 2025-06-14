@@ -45,29 +45,18 @@ async def worker_loop():
         body = obj["Body"].read()
         bio = BytesIO(body)
 
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-            tmp.write(body)
-            tmp_path = tmp.name
-
         start = time.time()
         try:
-            out = api.generate_image(tmp_path)
+            out = api.generate_image_buffer(bio)
         except Exception as e:
             log.error("worker.generate_error", request_id=rid, error=str(e))
             await redis.hset(f"job:{rid}", mapping={"status":"error", "error":str(e)})
             continue
 
-        with open(out, "rb") as f:
-            s3_key = upload_fileobj(f, key_prefix=f"output/{rid}")
-        # image_url = public_url(s3_key)
+        out.seek(0)
+        s3_key = upload_fileobj(out, key_prefix=f"output/{rid}")
         image_url = create_presigned_download(s3_key, expires_in=3600)
         log.info("worker.uploaded_s3", request_id=rid, s3_key=s3_key)
-
-        try:
-            os.remove(tmp_path)
-            os.remove(out)
-        except Exception:
-            pass
 
         duration = time.time() - start
         log.info("worker.job_done", request_id=rid, duration=duration)
