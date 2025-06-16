@@ -87,6 +87,9 @@ docker run -d \
   -p 5000:5000 \
   -e REDIS_URL="redis://redis-local:6379/0" \
   -e BASE_URL="http://localhost:5000" \
+  -e AWS_ACCESS_KEY_ID="XXXXXXXXXXX" \
+  -e AWS_SECRET_ACCESS_KEY="XXXXXXXXXXXXXXXXXX" \
+  -e AWS_REGION="us-east-1"
   mamulengos-api
 ```
 
