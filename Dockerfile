@@ -27,4 +27,4 @@ COPY . .
 EXPOSE 5000
 
 # Comando padrão para rodar o servidor FastAPI
-CMD ["uvicorn", "main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uvicorn", "main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "5000", "--log-level", "info"]

@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 
 import structlog
+import logging
 from sentry_sdk import init as sentry_init
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
@@ -20,6 +21,8 @@ import asyncio
 BASE_DIR = os.path.dirname(__file__)
 STATIC_DIR = os.path.join(BASE_DIR, "frontend/static")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend/templates")
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 sentry_init(
     dsn=settings.SENTRY_DSN,
@@ -39,7 +42,7 @@ structlog.configure(
     wrapper_class=structlog.stdlib.BoundLogger,
     cache_logger_on_first_use=True,
 )
-log = structlog.get_logger()
+log = structlog.get_logger(__name__)
 
 log_sender = LogSender(
     log_api=settings.LOG_API,
