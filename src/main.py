@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import structlog
 import logging
-from sentry_sdk import init as sentry_init
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+# from sentry_sdk import init as sentry_init
+# from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from core.config import settings
 from utils.log_sender import LogSender
@@ -24,10 +24,10 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend/templates")
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-sentry_init(
-    dsn=settings.SENTRY_DSN,
-    traces_sample_rate=1.0,
-)
+# sentry_init(
+#     dsn=settings.SENTRY_DSN,
+#     traces_sample_rate=1.0,
+# )
 
 structlog.configure(
     processors=[
@@ -51,7 +51,7 @@ log_sender = LogSender(
 )
 
 app = FastAPI()
-app.add_middleware(SentryAsgiMiddleware)
+# app.add_middleware(SentryAsgiMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
