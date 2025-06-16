@@ -93,7 +93,10 @@ async def get_result(request_id: str = Query(...)):
     return JSONResponse({"status": "queued"})
 
 @router.post("/api/notify")
-async def register_notification(request_id: str, phone: str):
+async def register_notification(
+    request_id: str = Form(...),
+    phone: str = Form(...)
+):
     key = f"job:{request_id}"
     if not await redis.exists(key):
         raise HTTPException(404, "Request ID não encontrado")
