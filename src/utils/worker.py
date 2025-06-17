@@ -36,26 +36,32 @@ async def worker_loop():
         rid = job["id"]
         inp = job["input"]
 
-        log.info("worker.job_popped", request_id=rid, input_path=inp)
+        log.info("worker.job_popped", request_id=rid, input_key=inp)
 
         # marca como processing
-        await redis.hset(f"job:{rid}", mapping={"status":"processing", "input":inp})
+        await redis.hset(f"job:{rid}", "status", "processing")
 
+        # faz download da imagem de entrada do S3
         obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=inp)
         body = obj["Body"].read()
         bio = BytesIO(body)
 
         start = time.time()
         try:
+            # gera um BytesIO com a saída
             out = api.generate_image_buffer(bio)
         except Exception as e:
-            log.error("worker.generate_error", request_id=rid, error=str(e))
-            await redis.hset(f"job:{rid}", mapping={"status":"error", "error":str(e)})
+            err = str(e)
+            log.error("worker.generate_error", request_id=rid, error=err)
+            await redis.hset(f"job:{rid}", mapping={"status": "error", "error": err})
             continue
 
+        # volta o ponteiro pra leitura
         out.seek(0)
+
+        # envia a saída pra S3
         s3_key = upload_fileobj(out, key_prefix=f"output/{rid}")
-        image_url = create_presigned_download(s3_key, expires_in=3600)
+        image_url = create_presigned_download(s3_key, expires_in=86400)
         log.info("worker.uploaded_s3", request_id=rid, s3_key=s3_key)
 
         duration = time.time() - start
@@ -67,15 +73,15 @@ async def worker_loop():
         await redis.set("avg_processing_time", new_avg)
         log.info("worker.avg_updated", new_avg=new_avg)
 
-        # grava resultado
-        await redis.hset(f"job:{rid}", mapping={"status":"done", "output":image_url})
+        # grava resultado final
+        await redis.hset(f"job:{rid}", mapping={"status": "done", "output": image_url})
         log.info("worker.job_finished", request_id=rid, image_url=image_url)
 
-        # notifica por SMS se tiver número
+        # se tiver telefone, manda SMS síncrono
         phone = await redis.hget(f"job:{rid}", "phone")
         if phone:
             sent = send_sms_download_message(image_url, phone)
-            log.info("worker.sms_sent", request_id=rid, phone=phone, success=sent)
             await redis.hset(f"job:{rid}", "sms_status", "sent" if sent else "failed")
+            log.info("worker.sms_sent", request_id=rid, phone=phone, success=sent)
         else:
             log.info("worker.no_phone", request_id=rid)

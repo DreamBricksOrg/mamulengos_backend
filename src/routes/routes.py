@@ -25,8 +25,8 @@ BASE_DIR = os.path.dirname(__file__)
 TEMPLATES_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "frontend", "templates"))
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
-async def enqueue_job(rid: str, input_path: str):
-    payload = {"id": rid, "input": input_path}
+async def enqueue_job(rid: str, input_key: str):
+    payload = {"id": rid, "input": input_key}
     await redis.lpush("submissions_queue", json.dumps(payload))
 
 async def send_sms_task(request_id: str, image_url: str, phone: str):
@@ -41,6 +41,7 @@ async def index(request: Request, image_url: str = None):
         "image_url": image_url
     })
 
+
 @router.get("/alive")
 async def alive():
     return "Alive"
@@ -48,16 +49,24 @@ async def alive():
 @router.post("/api/upload")
 async def upload(
     background_tasks: BackgroundTasks,
-    image: UploadFile = File(...)
+    image: UploadFile = File(...),
 ):
-    if image.filename == "":
+    if not image.filename:
         raise HTTPException(400, "Nome de arquivo inválido")
 
     rid = str(uuid.uuid4())
+    key = f"job:{rid}"
+    await redis.hset(key, mapping={
+        "status": "queued",
+        "input": "",
+        "output": "",
+    })
 
     content = await image.read()
     bio = BytesIO(content)
     input_key = upload_fileobj(bio, key_prefix=f"input/{rid}")
+
+    await redis.hset(key, "input", input_key)
 
     background_tasks.add_task(enqueue_job, rid, input_key)
 
@@ -71,7 +80,6 @@ async def upload(
         "position_in_queue": pos,
         "estimated_wait_seconds": eta
     })
-
 
 @router.get("/api/result")
 async def get_result(request_id: str = Query(...)):
@@ -102,7 +110,7 @@ async def get_result(request_id: str = Query(...)):
 async def register_notification(
     background_tasks: BackgroundTasks,
     request_id: str = Form(...),
-    phone: str = Form(...)
+    phone: str = Form(...),
 ):
     key = f"job:{request_id}"
     if not await redis.exists(key):
