@@ -39,6 +39,16 @@
 
 5. Inicie a aplicação:
 
+  Antes adicione as váriaveis de ambiente ao bash onde estiver executando, para ter acesso de desenvolvimento a stack da AWS que está sendo usada.
+
+   ```bash
+   $env:AWS_ACCESS_KEY_ID="XXXXXXXXXXXXXX"
+   $env:AWS_SECRET_ACCESS_KEY="XXXXXXXXX"
+   $env:AWS_REGION="us-east-1"
+   ```
+
+Depois rode assim para debuggar
+
    ```bash
    uvicorn main:app \
      --app-dir src \

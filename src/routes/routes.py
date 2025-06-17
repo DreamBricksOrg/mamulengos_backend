@@ -3,6 +3,7 @@ import uuid
 import os
 import json
 from io import BytesIO
+import asyncio
 
 
 from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Query
@@ -27,6 +28,11 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 async def enqueue_job(rid: str, input_path: str):
     payload = {"id": rid, "input": input_path}
     await redis.lpush("submissions_queue", json.dumps(payload))
+
+async def send_sms_task(request_id: str, image_url: str, phone: str):
+    sent = await asyncio.to_thread(send_sms_download_message, image_url, phone)
+    log.info("notify.immediate_sms", request_id=request_id, phone=phone, success=sent)
+    await redis.hset(f"job:{request_id}", "sms_status", "sent" if sent else "failed")
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request, image_url: str = None):
@@ -94,6 +100,7 @@ async def get_result(request_id: str = Query(...)):
 
 @router.post("/api/notify")
 async def register_notification(
+    background_tasks: BackgroundTasks,
     request_id: str = Form(...),
     phone: str = Form(...)
 ):
@@ -104,16 +111,13 @@ async def register_notification(
     formatted = format_to_e164(phone)
     await redis.hset(key, "phone", formatted)
 
-    # se o job já estiver `done`, dispare o SMS imediatamente
     data = await redis.hgetall(key)
     if data.get("status") == "done":
-        image_url = data.get("output")
-        sent = send_sms_download_message(image_url, formatted)
-        log.info("notify.immediate_sms", request_id=request_id, phone=formatted, success=sent)
-        await redis.hset(key, "sms_status", "sent" if sent else "failed")
+        image_url = data["output"]
+        # agenda o envio de SMS sem bloquear o request
+        background_tasks.add_task(send_sms_task, request_id, image_url, formatted)
 
     return JSONResponse({"status": "PHONE_REGISTERED"})
-
 
 @router.get("/error")
 async def error(request: Request):
