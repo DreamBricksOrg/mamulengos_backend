@@ -13,12 +13,9 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 from fastapi import HTTPException
 
+from core.config import settings
 
 log = structlog.get_logger()
-
-BASE_DIR = os.path.dirname(__file__)
-STATIC_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "frontend", "static"))
-
 
 def create_zip_of_images(folder_path: str) -> io.BytesIO:
     """
@@ -226,7 +223,7 @@ def remove_old_folders():
     """
     while True:
         current_time = time.time()
-        directory = os.path.join(STATIC_DIR, "download_images")
+        directory = os.path.join(settings.STATIC_DIR, "download_images")
         minutes = 10
 
         for foldername in os.listdir(directory):

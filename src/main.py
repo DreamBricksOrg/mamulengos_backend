@@ -18,10 +18,6 @@ import os
 import asyncio
 
 
-BASE_DIR = os.path.dirname(__file__)
-STATIC_DIR = os.path.join(BASE_DIR, "frontend/static")
-TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend/templates")
-
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 # sentry_init(
@@ -59,9 +55,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 app.include_router(rest_router)
 

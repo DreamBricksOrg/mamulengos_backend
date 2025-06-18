@@ -34,12 +34,9 @@ async def send_sms_task(request_id: str, image_url: str, phone: str):
     log.info("notify.immediate_sms", request_id=request_id, phone=phone, success=sent)
     await redis.hset(f"job:{request_id}", "sms_status", "sent" if sent else "failed")
 
-@router.get("/", response_class=HTMLResponse)
-async def index(request: Request, image_url: str = None):
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "image_url": image_url
-    })
+@router.get("/")
+async def index():
+    return "Hello Mamulengo"
 
 
 @router.get("/alive")
