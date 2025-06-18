@@ -80,7 +80,7 @@ async def worker_loop():
         # se tiver telefone, manda SMS síncrono
         phone = await redis.hget(f"job:{rid}", "phone")
         if phone:
-            sent = send_sms_download_message(image_url, phone)
+            sent = send_sms_download_message(f"https://apostenaquinadesaojoao.com.br/meumamulengo.html?image_id={rid}", phone)
             await redis.hset(f"job:{rid}", "sms_status", "sent" if sent else "failed")
             log.info("worker.sms_sent", request_id=rid, phone=phone, success=sent)
         else:

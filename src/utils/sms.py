@@ -40,8 +40,7 @@ def send_sms_download_message(message_url: str, destination_number: str) -> bool
     Envia SMS com link para download.
     """
     body = (
-        "Seu Mamulengo está pronto! 👒🔥\n"
-        "Acesse aqui para ver como ficou:\n\n"
+        "Seu Mamulengo ficou pronto: \n"
         f"{message_url}"
     )
     return send_sms_message(body, destination_number)
