@@ -6,7 +6,8 @@ import tempfile
 from io import BytesIO
 
 from core.config import settings
-from core.comfyui_api import ComfyUiAPI
+#from core.comfyui_api import ComfyUiAPI
+from core.multi_comfyui_api import MultiComfyUiAPI
 from core.redis import redis
 from utils.sms import send_sms_download_message
 from utils.s3 import upload_fileobj, s3_client, create_presigned_download
@@ -20,8 +21,12 @@ async def worker_loop():
     processa cada um sequencialmente, atualiza métricas e envia SMS quando
     o usuário tiver registrado um telefone.
     """
-    api = ComfyUiAPI(
-        settings.COMFYUI_API_SERVER,
+
+    server_list = [settings.COMFYUI_API_SERVER, settings.COMFYUI_API_SERVER2,
+                   settings.COMFYUI_API_SERVER3, settings.COMFYUI_API_SERVER4]
+
+    api = MultiComfyUiAPI(
+        server_list,
         settings.IMAGE_TEMP_FOLDER,
         settings.WORKFLOW_PATH,
         settings.WORKFLOW_NODE_ID_KSAMPLER,
@@ -47,7 +52,8 @@ async def worker_loop():
 
         start = time.time()
         try:
-            out = api.generate_image_buffer(bio)
+            server_address = api.get_available_server_address()
+            out = api.generate_image_buffer(server_address, bio)
         except Exception as e:
             log.error("worker.generate_error", request_id=rid, error=str(e))
             await redis.hset(f"job:{rid}", mapping={"status":"error", "error":str(e)})

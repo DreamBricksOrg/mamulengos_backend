@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     UDP_PORT: int = Field(default=7001, env="UDP_PORT")
     TIMER_TERMS: str = Field(20, env="TIMER_TERMS")
     COMFYUI_API_SERVER: str = Field(default=None, env="COMFYUI_API_SERVER")
+    COMFYUI_API_SERVER2: str = Field(default=None, env="COMFYUI_API_SERVER2")
+    COMFYUI_API_SERVER3: str = Field(default=None, env="COMFYUI_API_SERVER3")
+    COMFYUI_API_SERVER4: str = Field(default=None, env="COMFYUI_API_SERVER4")
     IMAGE_TEMP_FOLDER: str = Field(default="static/outputs", env="IMAGE_TEMP_FOLDER")
     REDIS_URL: str = Field(..., env="REDIS_URL")
     SENTRY_DSN: Optional[str] = Field(default=None, env="SENTRY_DSN")
@@ -24,6 +27,8 @@ class Settings(BaseSettings):
     DEFAULT_PROCESSING_TIME: int = Field(8000, env="DEFAULT_PROCESSING_TIME")
     AWS_REGION: str = Field(..., env="AWS_REGION")
     S3_BUCKET: str = Field(..., env="S3_BUCKET")
+    AWS_ACCESS_KEY_ID: str = Field(default=None, env="AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: str = Field(default=None, env="AWS_SECRET_ACCESS_KEY")
 
 
     class Config:
