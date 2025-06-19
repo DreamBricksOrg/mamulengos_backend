@@ -2,6 +2,7 @@ import uuid
 import json
 import random
 import datetime
+import time
 import io
 import copy
 import urllib.request
@@ -311,7 +312,82 @@ class ComfyUiAPI:
         log.info("Processing time:    %ss", (timing["execution_done"] - timing["start_execution"]).total_seconds())
         log.info("Saving time:        %ss", (timing["save"] - timing["execution_done"]).total_seconds())
         log.info("Total:              %ss", (timing["save"] - start_time).total_seconds())
+        log.info("[DEBUG] Saved image file buffering: %s", buf)
+        if not buf:
+            raise RuntimeError("Erro: Caminho da imagem gerada está vazio!")
 
+        return buf
+
+    def _poll_history(self, prompt_id: str, timeout: float = 60, interval: float = 1.0):
+        """Fica consultando /history até ver status `complete` ou estourar timeout."""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            r = self.session.get(f"http://{self.server_address}/history/{prompt_id}")
+            r.raise_for_status()
+            data = r.json().get(prompt_id, {})
+            if data.get("status") == "complete":
+                return data
+            time.sleep(interval)
+        raise RuntimeError(f"Timeout aguardando history for {prompt_id}")
+
+    def generate_image_buffer_http(self, file_obj: io.BytesIO) -> io.BytesIO:
+        """
+        1) POST /upload/image
+        2) POST /prompt
+        3) poll /history/{prompt_id}
+        4) GET /view?…
+        5) devolve BytesIO PNG
+        """
+        timing = {}
+        client_id = str(uuid.uuid4())
+        timing['start'] = datetime.datetime.now()
+
+        files = {'image': ('inp.png', file_obj, 'image/png')}
+        r = self.session.post(f"http://{self.server_address}/upload/image", files=files)
+        r.raise_for_status()
+        upload_resp = r.json()
+        comfyui_path = upload_resp['name'] if not upload_resp.get('subfolder') \
+                     else f"{upload_resp['subfolder']}/{upload_resp['name']}"
+        
+        timing['uploaded'] = datetime.datetime.now()
+
+        tpl = copy.deepcopy(self.workflow_template)
+        tpl[self.node_id_image_load]['inputs']['image'] = comfyui_path
+        payload = {'prompt': tpl, 'client_id': client_id}
+        r = self.session.post(f"http://{self.server_address}/prompt", json=payload)
+        r.raise_for_status()
+        prompt_id = r.json()['prompt_id']
+
+        timing['queued'] = datetime.datetime.now()
+
+        history = self._poll_history(prompt_id)
+        timing['done'] = datetime.datetime.now()
+
+        outputs = history.get('outputs', {})
+        # encontra o primeiro nó que tenha imagens
+        for node_id, node_data in outputs.items():
+            imgs = node_data.get('images') or []
+            if imgs:
+                img_meta = imgs[0]
+                params = {
+                    'filename': img_meta['filename'],
+                    'subfolder': img_meta.get('subfolder', ''),
+                    'type': img_meta['type']
+                }
+                r = self.session.get(f"http://{self.server_address}/view", params=params)
+                r.raise_for_status()
+                buf = io.BytesIO(r.content)
+                buf.seek(0)
+                timing['fetched'] = datetime.datetime.now()
+                break
+        else:
+            raise RuntimeError("Nenhuma imagem retornada pelo ComfyUI")
+
+        log.info("timing.upload",    secs=(timing['uploaded'] - timing['start']).total_seconds())
+        log.info("timing.queue",     secs=(timing['queued']  - timing['uploaded']).total_seconds())
+        log.info("timing.execution", secs=(timing['done']    - timing['queued']).total_seconds())
+        log.info("timing.fetch",     secs=(timing['fetched'] - timing['done']).total_seconds())
+        log.info("timing.total",     secs=(timing['fetched'] - timing['start']).total_seconds())
         log.info("[DEBUG] Saved image file buffering: %s", buf)
         if not buf:
             raise RuntimeError("Erro: Caminho da imagem gerada está vazio!")
