@@ -1,8 +1,7 @@
-import os
+import asyncio
 import json
 import time
 import structlog
-import tempfile
 from io import BytesIO
 
 from core.config import settings
@@ -85,3 +84,11 @@ async def worker_loop():
             log.info("worker.sms_sent", request_id=rid, phone=phone, success=sent)
         else:
             log.info("worker.no_phone", request_id=rid)
+
+
+if __name__ == "__main__":
+    """
+    Inicia o worker_loop em paralelo ao servidor.
+    """
+    log.info("worker.startup")
+    asyncio.run(worker_loop())

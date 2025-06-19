@@ -1,0 +1,39 @@
+version: "3.8"
+services:
+  redis:
+    image: redis:7-alpine
+    networks:
+      - mamulengos-net
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mamulengos-api:latest
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    ports:
+      - "5000:5000"
+    networks:
+      - mamulengos-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: mamulengos-worker:latest
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - mamulengos-net
+
+networks:
+  mamulengos-net:
+    driver: bridge
+    name: mamulengos-net

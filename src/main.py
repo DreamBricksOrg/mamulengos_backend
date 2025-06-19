@@ -1,6 +1,4 @@
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 
 import structlog
@@ -10,12 +8,7 @@ import logging
 
 from core.config import settings
 from utils.log_sender import LogSender
-from utils.worker import worker_loop
-
 from routes.routes import router as rest_router
-
-import os
-import asyncio
 
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -57,11 +50,3 @@ app.add_middleware(
 )
 
 app.include_router(rest_router)
-
-@app.on_event("startup")
-async def start_worker():
-    """
-    Inicia o worker_loop em paralelo ao servidor.
-    """
-    log.info("worker.startup")
-    asyncio.create_task(worker_loop())

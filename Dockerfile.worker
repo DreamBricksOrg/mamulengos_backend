@@ -1,0 +1,21 @@
+# Base image
+FROM python:3.10-slim
+
+# Evita buffers em logs
+ENV PYTHONUNBUFFERED=1
+
+# Diretório de trabalho
+WORKDIR /app
+
+# Copia e instala dependências via pip
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copia todo o código do projeto para /app
+COPY . .
+
+ENV PYTHONPATH=/app/src
+
+# Comando para rodar o worker
+CMD ["python", "-u", "src/worker.py"]
