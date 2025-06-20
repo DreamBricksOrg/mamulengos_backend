@@ -65,19 +65,23 @@ class Worker:
         try:
             #server_address = self.api.get_available_server_address()
             await redis.hset(f"job:{request_id}", mapping={"server": server_address})
-            print("starting image generation")
+            #print("starting image generation")
             #out = self.api.generate_image_buffer(server_address, bio)
             # Run generate_image_buffer in a background thread
             out = await asyncio.to_thread(self.api.generate_image_buffer, server_address, bio)
-            print("finished image generation")
+            #print("finished image generation")
         except Exception as e:
-            log.error("worker.generate_error", request_id=request_id, error=str(e))
-            await redis.hset(f"job:{request_id}", mapping={"status": "failed", "error": str(e)})
+            err = str(e)
+            log.error("worker.generate_error", request_id=request_id, error=err)
+            await redis.hset(f"job:{request_id}", mapping={"status": "failed", "error": err})
             return
 
+        # volta o ponteiro pra leitura
         out.seek(0)
+
+        # envia a saída pra S3
         s3_key = upload_fileobj(out, key_prefix=f"output/{request_id}")
-        image_url = create_presigned_download(s3_key, expires_in=3600)
+        image_url = create_presigned_download(s3_key, expires_in=86400)
         log.info("worker.uploaded_s3", request_id=request_id, s3_key=s3_key)
 
         duration = time.time() - start
@@ -96,9 +100,9 @@ class Worker:
         # notifica por SMS se tiver número
         phone = await redis.hget(f"job:{request_id}", "phone")
         if phone:
-            sent = send_sms_download_message(image_url, phone)
-            log.info("worker.sms_sent", request_id=request_id, phone=phone, success=sent)
+            sent = send_sms_download_message(f"https://apostenaquinadesaojoao.com.br/meumamulengo.html?image_id={request_id}", phone)
             await redis.hset(f"job:{request_id}", "sms_status", "sent" if sent else "failed")
+            log.info("worker.sms_sent", request_id=request_id, phone=phone, success=sent)
         else:
             log.info("worker.no_phone", request_id=request_id)
 
@@ -123,9 +127,9 @@ class Worker:
             request_id = key[4:]
 
             if status in matching_statuses:
-                print(f"Job ID: {key}")
+                log.info(f"Job ID: {key}")
                 for k, v in job_data.items():
-                    print(f"  {k}: {v}")
+                    log.info(f"  {k}: {v}")
 
                 if status == "queued":
                     if request_id not in self.queued_jobs:
@@ -145,24 +149,7 @@ class Worker:
                     else:
                         await redis.hset(f"job:{request_id}", mapping={"status": "error"})
 
-                print("-" * 40)
-
-    async def old_activate_queued_jobs(self):
-        # check if there are available servers to process the jobs
-
-        earliest_job_id = self.get_earliest_job(self.queued_jobs)
-        if earliest_job_id:
-            earliest = self.queued_jobs[earliest_job_id]
-            request_id = earliest["job_id"]
-            input_path = earliest["input"]
-            print(f"Found job to start (request_id:'{request_id}', input_path:'{input_path}')")
-            if not input_path or len(input_path) == 0:
-                await redis.hset(f"job:{request_id}", mapping={"status": "error", "error": "No input path"})
-                return
-
-            print(f"Process Job: {request_id} - {input_path}")
-            self.queued_jobs.pop(request_id)
-            await self.process_one_job(request_id, input_path)
+                log.info("-" * 40)
 
     async def activate_queued_jobs(self):
         # check if there are available servers to process the jobs
@@ -178,13 +165,13 @@ class Worker:
                 earliest = self.queued_jobs[earliest_job_id]
                 request_id = earliest["job_id"]
                 input_path = earliest["input"]
-                print(f"Found job to start (request_id:'{request_id}', input_path:'{input_path}')")
+                log.info(f"Found job to start (request_id:'{request_id}', input_path:'{input_path}')")
 
                 if not input_path:
                     await self.redis.hset(f"job:{request_id}", mapping={"status": "error", "error": "No input path"})
                     continue
 
-                print(f"Process Job: {request_id} - {input_path}")
+                #print(f"Process Job: {request_id} - {input_path}")
                 self.queued_jobs.pop(request_id)
 
                 # Run process_one_job in a thread
@@ -203,19 +190,19 @@ class Worker:
         """
 
         while True:
-            print("sleep")
-            await asyncio.sleep(2)
+            #print("sleep")
+            await asyncio.sleep(0.5)
 
             # checks if there are new jobs
-            print("check_for_new_jobs")
+            #print("check_for_new_jobs")
             await self.check_for_new_jobs()
 
-            print("process_jobs")
+            #print("process_jobs")
             await self.process_jobs()
 
-            print("activate_queued_jobs")
+            #print("activate_queued_jobs")
             await self.activate_queued_jobs()
 
-            print("==" * 40)
+            log.info("=" * 40)
 
 
