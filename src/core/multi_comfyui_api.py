@@ -9,6 +9,7 @@ import urllib.parse
 import requests
 import websocket
 import structlog
+import aiohttp
 
 from PIL import Image
 
@@ -16,10 +17,6 @@ from core.config import settings
 from utils.files import generate_timestamped_filename
 
 log = structlog.get_logger()
-
-import asyncio
-import aiohttp
-
 
 
 class MultiComfyUiAPI:
@@ -32,7 +29,6 @@ class MultiComfyUiAPI:
         node_id_image_load: str,
         node_id_text_input: str,
     ):
-        #self.server_address = None
         self.server_address_list = server_address_list
         self.img_temp_folder = img_temp_folder
         self.node_id_ksampler = node_id_ksampler
@@ -60,9 +56,9 @@ class MultiComfyUiAPI:
                         data = await response.json()
                         return data.get("queue_running", False)
                     else:
-                        print(f"Error: HTTP {response.status} from ComfyUI")
+                        log.warning(f"Error: HTTP {response.status} from ComfyUI")
         except Exception as e:
-            print(f"Failed to connect to ComfyUI at {server_url}: {e}")
+            log.warning(f"Failed to connect to ComfyUI at {server_url}: {e}")
 
         return True  # Assume busy or unreachable
 
@@ -199,103 +195,6 @@ class MultiComfyUiAPI:
                 return filename
 
         raise RuntimeError("Nenhuma imagem encontrada para salvar.")
-
-    def xgenerate_image(self, image_path: str) -> str:
-        """
-        Fluxo completo para gerar imagem:
-        1. Faz upload da imagem de entrada
-        2. Constrói o prompt a partir do template (configura nós)
-        3. Abre WebSocket e aguarda término da execução
-        4. Salva a primeira imagem retornada e retorna o caminho salvo
-        """
-        timing = {}
-        client_id = str(uuid.uuid4())
-        start_time = datetime.datetime.now()
-
-        with open(image_path, "rb") as f:
-            comfyui_path = self.upload_file(f, subfolder="", overwrite=True)
-        timing["upload"] = datetime.datetime.now()
-
-        if not comfyui_path:
-            raise RuntimeError("Falha ao fazer upload da imagem para ComfyUI.")
-
-        # king_prompt = (
-        #     "king wearing a golden crown, male, 1boy"
-        # )
-        # queen_prompt = (
-        #     "queen wearing a golden crown, female, 1girl, woman, diamond earings and necklaces"
-        # )
-        # gender_prompt = king_prompt if is_king else queen_prompt
-
-        # input_prompt_text = (
-        #     f"30 years of age, {gender_prompt}, gold and red ornaments, "
-        #     "european red coat with white fur, renascence, inside a castle, old "
-        #     "paintings on the walls, large windows with red curtains, blurry background, "
-        #     "photo, photorealistic, realism"
-        # )
-
-        prompt = copy.deepcopy(self.workflow_template)
-        # prompt[self.node_id_ksampler]["inputs"]["seed"] = random.randint(1, 1_000_000_000)
-        prompt[self.node_id_image_load]["inputs"]["image"] = comfyui_path
-        # prompt[self.node_id_text_input]["inputs"]["text"] = input_prompt_text
-
-        ws_url = f"ws://{self.server_address}/ws?clientId={client_id}"
-        ws = websocket.WebSocket()
-        ws.connect(ws_url)
-        timing["start_execution"] = datetime.datetime.now()
-
-        images = self.get_images(ws, prompt, client_id)
-        timing["execution_done"] = datetime.datetime.now()
-        ws.close()
-
-        image_file_path = self.save_image(images)
-        timing["save"] = datetime.datetime.now()
-
-        log.info("[Timing Info]")
-        log.info("Upload time:        %ss", (timing["upload"] - start_time).total_seconds())
-        log.info(
-            "Execution wait:     %ss",
-            (timing["start_execution"] - timing["upload"]).total_seconds(),
-        )
-        log.info(
-            "Processing time:    %ss",
-            (timing["execution_done"] - timing["start_execution"]).total_seconds(),
-        )
-        log.info(
-            "Saving time:        %ss",
-            (timing["save"] - timing["execution_done"]).total_seconds(),
-        )
-        log.info("Total:              %ss", (timing["save"] - start_time).total_seconds())
-
-        log.info("[DEBUG] Saved image path: %s", image_file_path)
-        if not image_file_path:
-            raise RuntimeError("Erro: Caminho da imagem gerada está vazio!")
-
-        return image_file_path
-
-    def add_watermark_image(self, base_image_path: str, watermark_path: str) -> None:
-        """
-        Adiciona marca d'água à imagem gerada pelo ComfyUI.
-        Insere o watermark no centro inferior da imagem.
-        """
-        base_image = Image.open(base_image_path).convert("RGBA")
-        watermark = Image.open(watermark_path).convert("RGBA")
-
-        if watermark.width > base_image.width:
-            ratio = (base_image.width / watermark.width) * 0.5
-            new_size = (int(watermark.width * ratio), int(watermark.height * ratio))
-            watermark = watermark.resize(new_size, Image.Resampling.LANCZOS)
-
-        position = (
-            (base_image.width - watermark.width) // 2,
-            base_image.height - watermark.height - 10,
-        )
-
-        composite = Image.new("RGBA", base_image.size)
-        composite = Image.alpha_composite(composite, base_image)
-        composite.paste(watermark, position, watermark)
-
-        composite.convert("RGB").save(base_image_path, "PNG")
 
     def save_image_buffer(self, images: dict) -> io.BytesIO:
         """
