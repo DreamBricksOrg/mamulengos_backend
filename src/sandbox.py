@@ -44,7 +44,7 @@ def get_earliest_job(queued_jobs):
 async def print_active_jobs(redis_url="redis://localhost"):
     #r = redis.from_url(redis_url)
     redis = Redis.from_url(redis_url, encoding="utf-8", decode_responses=True)
-    matching_statuses = {"processing", "queued", "error"}
+    matching_statuses = {"processing", "queued", "fail"}
 
     async for key in redis.scan_iter("job:*"):
         job_data = await redis.hgetall(key)
@@ -54,8 +54,8 @@ async def print_active_jobs(redis_url="redis://localhost"):
             for k, v in job_data.items():
                 print(f"  {k}: {v}")
             print("-" * 40)
-            if status == "error":
-                await redis.hset(f"{key}", mapping={"status": "done_error"})
+            if status == "fail":
+                await redis.hset(f"{key}", mapping={"status": "error"})
                 # , "input": job_data["input"], "error": job_data["error"]
 
 
@@ -72,5 +72,5 @@ async def show_earliest_job():
 
 # Run the function
 if __name__ == "__main__":
-    #asyncio.run(print_active_jobs())
-    asyncio.run(show_earliest_job())
+    asyncio.run(print_active_jobs())
+    #asyncio.run(show_earliest_job())

@@ -292,6 +292,7 @@ class MultiComfyUiAPI:
         # monta o prompt
         prompt = copy.deepcopy(self.workflow_template)
         prompt[self.node_id_image_load]["inputs"]["image"] = comfyui_path
+        prompt["3"]["inputs"]["seed"] = random.randint(0, 100000)
 
         # conecta WebSocket com o client_id correto
         ws_url = f"ws://{server_address}/ws?clientId={client_id}"
