@@ -17,6 +17,10 @@ from utils.files import generate_timestamped_filename
 
 log = structlog.get_logger()
 
+import asyncio
+import aiohttp
+
+
 
 class MultiComfyUiAPI:
     def __init__(
@@ -39,6 +43,45 @@ class MultiComfyUiAPI:
         with open(workflow_path, "r", encoding="utf-8") as f:
             self.workflow_template = json.load(f)
 
+    @staticmethod
+    async def is_comfyui_busy(server_url: str) -> bool:
+        """
+        Returns True if the ComfyUI server is currently processing a job,
+        False if it's idle.
+
+        :param server_url: Base URL of the ComfyUI server, e.g. 'http://127.0.0.1:8188'
+        """
+        status_url = f"{server_url.rstrip('/')}/queue"
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(status_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data.get("queue_running", False)
+                    else:
+                        print(f"Error: HTTP {response.status} from ComfyUI")
+        except Exception as e:
+            print(f"Failed to connect to ComfyUI at {server_url}: {e}")
+
+        return True  # Assume busy or unreachable
+
+    @staticmethod
+    def strip_http_scheme(url: str) -> str:
+        if url.startswith("http://"):
+            return url[len("http://"):]
+        elif url.startswith("https://"):
+            return url[len("https://"):]
+        return url
+
+    @staticmethod
+    def http_scheme_to_ws(url: str) -> str:
+        if url.startswith("http://"):
+            return "ws://" + url[len("http://"):]
+        elif url.startswith("https://"):
+            return "wss://" + url[len("https://"):]
+        return "ws://" + url
+
     def queue_prompt(self, server_address, prompt: dict, client_id: str) -> dict:
         """
         Envia o prompt para a ComfyUI via endpoint HTTP /prompt
@@ -46,7 +89,7 @@ class MultiComfyUiAPI:
         """
         payload = {"prompt": prompt, "client_id": client_id}
         data = json.dumps(payload).encode("utf-8")
-        url = f"http://{server_address}/prompt"
+        url = f"{server_address}/prompt"
         req = urllib.request.Request(url, data=data)
         with urllib.request.urlopen(req) as response:
             return json.loads(response.read())
@@ -59,7 +102,7 @@ class MultiComfyUiAPI:
         params = urllib.parse.urlencode(
             {"filename": filename, "subfolder": subfolder, "type": folder_type}
         )
-        url = f"http://{server_address}/view?{params}"
+        url = f"{server_address}/view?{params}"
         with urllib.request.urlopen(url) as response:
             return response.read()
 
@@ -68,7 +111,7 @@ class MultiComfyUiAPI:
         Consulta o histórico de execuções do prompt por prompt_id
         via HTTP GET em /history/{prompt_id}
         """
-        url = f"http://{server_address}/history/{prompt_id}"
+        url = f"{server_address}/history/{prompt_id}"
         with urllib.request.urlopen(url) as response:
             return json.loads(response.read())
 
@@ -122,7 +165,7 @@ class MultiComfyUiAPI:
             if subfolder:
                 data["subfolder"] = subfolder
 
-            url = f"http://{server_address}/upload/image"
+            url = f"{server_address}/upload/image"
             response = self.session.post(url, files=files, data=data)
             if response.status_code == 200:
                 response_data = response.json()
@@ -267,8 +310,22 @@ class MultiComfyUiAPI:
                 return buf
         raise RuntimeError("Nenhuma imagem encontrada para salvar.")
 
-    def get_available_server_address(self):
-        return self.server_address_list[0]
+    async def get_available_server_addresses(self):
+        result = []
+        for server_address in self.server_address_list:
+            if not server_address or len(server_address) == 0:
+                continue
+            prefix = ""
+            if server_address == "localhost:8188":
+                prefix = "http://"
+            print(f"checking server '{prefix + server_address}'")
+            busy = await self.is_comfyui_busy(prefix + server_address)
+            if not busy:
+                print(f"server '{server_address}' is not busy")
+                result.append(server_address)
+            else:
+                print(f"server '{server_address}' is busy or not running")
+        return result
 
     def generate_image_buffer(self, server_address, file_obj) -> str:
         """
@@ -283,6 +340,7 @@ class MultiComfyUiAPI:
         start_time = datetime.datetime.now()
 
         # upload usando o file-like em memória
+        print("image upload")
         comfyui_path = self.upload_file(file_obj, server_address=server_address, subfolder="", overwrite=True)
         timing["upload"] = datetime.datetime.now()
 
@@ -295,12 +353,15 @@ class MultiComfyUiAPI:
         prompt["3"]["inputs"]["seed"] = random.randint(0, 100000)
 
         # conecta WebSocket com o client_id correto
-        ws_url = f"ws://{server_address}/ws?clientId={client_id}"
+        ws_add = self.http_scheme_to_ws(server_address)
+        print(f"websocket connection: {ws_add}")
+        ws_url = f"{ws_add}/ws?clientId={client_id}"
         ws = websocket.WebSocket()
         ws.connect(ws_url)
         timing["start_execution"] = datetime.datetime.now()
 
         # aguarda execução e coleta imagens
+        print("wait for image generation")
         images = self.get_images(ws, server_address, prompt, client_id)
         timing["execution_done"] = datetime.datetime.now()
         ws.close()

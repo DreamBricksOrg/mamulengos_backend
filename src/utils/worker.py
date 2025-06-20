@@ -42,8 +42,8 @@ class Worker:
 
         return min_job_id
 
-    async def process_one_job(self, request_id, input_path):
-        log.info("worker.job_popped", request_id=request_id, input_path=input_path)
+    async def process_one_job(self, server_address, request_id, input_path):
+        log.info("worker.job_popped", server_address=server_address, request_id=request_id, input_path=input_path)
 
         attempt = await redis.hget(f"job:{request_id}", "attempt")
         if not attempt:
@@ -63,7 +63,7 @@ class Worker:
 
         start = time.time()
         try:
-            server_address = self.api.get_available_server_address()
+            #server_address = self.api.get_available_server_address()
             await redis.hset(f"job:{request_id}", mapping={"server": server_address})
             print("starting image generation")
             #out = self.api.generate_image_buffer(server_address, bio)
@@ -167,25 +167,33 @@ class Worker:
     async def activate_queued_jobs(self):
         # check if there are available servers to process the jobs
 
-        print(">>> activate_queued_jobs")
         earliest_job_id = self.get_earliest_job(self.queued_jobs)
-        if earliest_job_id:
-            earliest = self.queued_jobs[earliest_job_id]
-            request_id = earliest["job_id"]
-            input_path = earliest["input"]
-            print(f"Found job to start (request_id:'{request_id}', input_path:'{input_path}')")
+        if not earliest_job_id:
+            return
 
-            if not input_path:
-                await self.redis.hset(f"job:{request_id}", mapping={"status": "error", "error": "No input path"})
-                return
+        available_servers = await self.api.get_available_server_addresses()
 
-            print(f"Process Job: {request_id} - {input_path}")
-            self.queued_jobs.pop(request_id)
+        for available_server in available_servers:
+            if earliest_job_id:
+                earliest = self.queued_jobs[earliest_job_id]
+                request_id = earliest["job_id"]
+                input_path = earliest["input"]
+                print(f"Found job to start (request_id:'{request_id}', input_path:'{input_path}')")
 
-            # Run process_one_job in a thread
-            #asyncio.create_task(asyncio.to_thread(self.process_one_job, request_id, input_path))
-            asyncio.create_task(self.process_one_job(request_id, input_path))
-        print("<<< activate_queued_jobs")
+                if not input_path:
+                    await self.redis.hset(f"job:{request_id}", mapping={"status": "error", "error": "No input path"})
+                    continue
+
+                print(f"Process Job: {request_id} - {input_path}")
+                self.queued_jobs.pop(request_id)
+
+                # Run process_one_job in a thread
+                #asyncio.create_task(asyncio.to_thread(self.process_one_job, request_id, input_path))
+                asyncio.create_task(self.process_one_job(available_server, request_id, input_path))
+
+                earliest_job_id = self.get_earliest_job(self.queued_jobs)
+            else:
+                break
 
     async def worker_loop(self):
         """
