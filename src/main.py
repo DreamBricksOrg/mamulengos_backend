@@ -10,7 +10,7 @@ import logging
 
 from core.config import settings
 from utils.log_sender import LogSender
-from utils.worker import worker_loop
+from utils.worker import Worker
 
 from routes.routes import router as rest_router
 
@@ -65,10 +65,15 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 app.include_router(rest_router)
 
+server_list = [settings.COMFYUI_API_SERVER, settings.COMFYUI_API_SERVER2,
+               settings.COMFYUI_API_SERVER3, settings.COMFYUI_API_SERVER4]
+
+worker = Worker(server_list)
+
 @app.on_event("startup")
 async def start_worker():
     """
     Inicia o worker_loop em paralelo ao servidor.
     """
     log.info("worker.startup")
-    asyncio.create_task(worker_loop())
+    asyncio.create_task(worker.worker_loop())
