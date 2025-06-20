@@ -116,11 +116,11 @@ async def register_notification(
     formatted = format_to_e164(phone)
     await redis.hset(key, "phone", formatted)
 
-    data = await redis.hgetall(key)
-    if data.get("status") == "done":
-        image_url = data["output"]
-        # agenda o envio de SMS sem bloquear o request
-        background_tasks.add_task(send_sms_task, request_id, image_url, formatted)
+    # data = await redis.hgetall(key)
+    # if data.get("status") == "done":
+    #     image_url = data["output"]
+    #     # agenda o envio de SMS sem bloquear o request
+    #     background_tasks.add_task(send_sms_task, request_id, image_url, formatted)
 
     return JSONResponse({"status": "PHONE_REGISTERED"})
 
