@@ -222,7 +222,7 @@ if __name__ == "__main__":
     """
     Inicia o worker_loop em paralelo ao servidor.
     """
-    server_list = [settings.COMFYUI_API_SERVER, settings.COMFYUI_API_SERVER2,
+    server_list = [settings.COMFYUI_API_SERVER1, settings.COMFYUI_API_SERVER2,
                    settings.COMFYUI_API_SERVER3, settings.COMFYUI_API_SERVER4]
 
     worker = Worker(server_list)

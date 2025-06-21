@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     STATIC_DIR: str = Field(..., env="STATIC_DIR")
     UDP_PORT: int = Field(default=7001, env="UDP_PORT")
     TIMER_TERMS: str = Field(20, env="TIMER_TERMS")
-    COMFYUI_API_SERVER: str = Field(default=None, env="COMFYUI_API_SERVER")
+    COMFYUI_API_SERVER1: str = Field(default=None, env="COMFYUI_API_SERVER1")
     COMFYUI_API_SERVER2: str = Field(default=None, env="COMFYUI_API_SERVER2")
     COMFYUI_API_SERVER3: str = Field(default=None, env="COMFYUI_API_SERVER3")
     COMFYUI_API_SERVER4: str = Field(default=None, env="COMFYUI_API_SERVER4")
