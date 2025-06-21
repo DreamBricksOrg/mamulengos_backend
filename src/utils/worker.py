@@ -8,7 +8,6 @@ from io import BytesIO
 from datetime import datetime
 
 from core.config import settings
-#from core.comfyui_api import ComfyUiAPI
 from core.multi_comfyui_api import MultiComfyUiAPI
 from core.redis import redis
 from utils.sms import send_sms_download_message
@@ -58,6 +57,7 @@ class Worker:
                                   "attempt": attempt,
                                   "proc_start_at": now})
 
+        # faz download da imagem de entrada do S3
         obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=input_path)
         body = obj["Body"].read()
         bio = BytesIO(body)
@@ -90,11 +90,11 @@ class Worker:
         await redis.set("avg_processing_time", new_avg)
         log.info("worker.avg_updated", new_avg=new_avg)
 
-        # grava resultado
+        # grava resultado final
         await redis.hset(f"job:{request_id}", mapping={"status": "done", "output": image_url})
         log.info("worker.job_finished", request_id=request_id, image_url=image_url)
 
-        # notifica por SMS se tiver número
+        # se tiver telefone, manda SMS síncrono
         phone = await redis.hget(f"job:{request_id}", "phone")
         if phone:
             sent = send_sms_download_message(f"https://apostenaquinadesaojoao.com.br/meumamulengo.html?image_id={request_id}", phone)
