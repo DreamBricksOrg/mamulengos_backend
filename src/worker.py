@@ -172,14 +172,18 @@ class Worker:
         for available_server in available_servers:
             if available_server in self.servers_in_use:
                 continue
+
+            earliest_job_id = self.get_earliest_job(self.queued_jobs)
             if earliest_job_id:
                 earliest = self.queued_jobs[earliest_job_id]
                 request_id = earliest["job_id"]
                 input_path = earliest["input"]
-                log.info(f"Found job to start (request_id:'{request_id}', input_path:'{input_path}')")
+                log.info(f"Found job to start (earliest_job_id: '{earliest_job_id}', request_id:'{request_id}', input_path:'{input_path}')")
 
-                if not input_path:
-                    await self.redis.hset(f"job:{request_id}", mapping={"status": "error", "error": "No input path"})
+                if not input_path or len(input_path) == 0:
+                    log.warn(f"Input path is empty - request_id:'{request_id}'")
+                    self.queued_jobs.pop(request_id)
+                    await redis.hset(f"job:{request_id}", mapping={"status": "error", "error": "No input path"})
                     continue
 
                 log.debug(f"Process Job: {request_id} - {input_path}")
@@ -187,8 +191,6 @@ class Worker:
 
                 # Run process_one_job in a thread
                 asyncio.create_task(self.process_one_job(available_server, request_id, input_path))
-
-                earliest_job_id = self.get_earliest_job(self.queued_jobs)
             else:
                 break
 
