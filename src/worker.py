@@ -152,7 +152,12 @@ class Worker:
                     server = job_data.get("server", "")
                     self.servers_in_use.add(server)
                     proc_start_at = job_data.get("proc_start_at", "")
-                    dt_proc_start_at = datetime.fromisoformat(proc_start_at)
+                    # se estiver vazio, usa agora para que duration seja zero
+                    dt_proc_start_at = (
+                        datetime.fromisoformat(proc_start_at)
+                        if proc_start_at
+                        else datetime.utcnow()
+                    )
                     duration = datetime.now() - dt_proc_start_at
                     if duration.total_seconds() > 300:
                         await redis.hset(f"job:{request_id}",
@@ -222,7 +227,7 @@ if __name__ == "__main__":
     """
     Inicia o worker_loop em paralelo ao servidor.
     """
-    server_list = [settings.COMFYUI_API_SERVER, settings.COMFYUI_API_SERVER2,
+    server_list = [settings.COMFYUI_API_SERVER1, settings.COMFYUI_API_SERVER2,
                    settings.COMFYUI_API_SERVER3, settings.COMFYUI_API_SERVER4]
 
     worker = Worker(server_list)
