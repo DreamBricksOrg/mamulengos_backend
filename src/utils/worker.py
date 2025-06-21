@@ -127,9 +127,9 @@ class Worker:
             request_id = key[4:]
 
             if status in matching_statuses:
-                log.info(f"Job ID: {key}")
-                for k, v in job_data.items():
-                    log.info(f"  {k}: {v}")
+                #log.info(f"Job ID: {key}")
+                #for k, v in job_data.items():
+                #    log.info(f"  {k}: {v}")
 
                 if status == "queued":
                     if request_id not in self.queued_jobs:
@@ -149,7 +149,7 @@ class Worker:
                     else:
                         await redis.hset(f"job:{request_id}", mapping={"status": "error"})
 
-                log.info("-" * 40)
+                #log.info("-" * 40)
 
     async def activate_queued_jobs(self):
         # check if there are available servers to process the jobs
@@ -203,6 +203,6 @@ class Worker:
             #print("activate_queued_jobs")
             await self.activate_queued_jobs()
 
-            log.info("=" * 40)
+            #log.info("=" * 40)
 
 
