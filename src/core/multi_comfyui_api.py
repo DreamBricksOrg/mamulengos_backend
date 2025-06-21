@@ -214,16 +214,13 @@ class MultiComfyUiAPI:
         for server_address in self.server_address_list:
             if not server_address or len(server_address) == 0:
                 continue
-            prefix = ""
-            if server_address == "localhost:8188":
-                prefix = "http://"
-            print(f"checking server '{prefix + server_address}'")
-            busy = await self.is_comfyui_busy(prefix + server_address)
+            log.debug(f"checking server '{server_address}'")
+            busy = await self.is_comfyui_busy(server_address)
             if not busy:
-                print(f"server '{server_address}' is not busy")
+                log.debug(f"server '{server_address}' is not busy")
                 result.append(server_address)
             else:
-                print(f"server '{server_address}' is busy or not running")
+                log.debug(f"server '{server_address}' is busy or not running")
         return result
 
     def generate_image_buffer(self, server_address, file_obj) -> str:
@@ -239,7 +236,7 @@ class MultiComfyUiAPI:
         start_time = datetime.datetime.now()
 
         # upload usando o file-like em memória
-        print("image upload")
+        log.debug("image upload")
         comfyui_path = self.upload_file(file_obj, server_address=server_address, subfolder="", overwrite=True)
         timing["upload"] = datetime.datetime.now()
 
@@ -253,14 +250,14 @@ class MultiComfyUiAPI:
 
         # conecta WebSocket com o client_id correto
         ws_add = self.http_scheme_to_ws(server_address)
-        print(f"websocket connection: {ws_add}")
+        log.debug(f"websocket connection: {ws_add}")
         ws_url = f"{ws_add}/ws?clientId={client_id}"
         ws = websocket.WebSocket()
         ws.connect(ws_url)
         timing["start_execution"] = datetime.datetime.now()
 
         # aguarda execução e coleta imagens
-        print("wait for image generation")
+        log.debug("wait for image generation")
         images = self.get_images(ws, server_address, prompt, client_id)
         timing["execution_done"] = datetime.datetime.now()
         ws.close()
