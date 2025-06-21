@@ -4,6 +4,7 @@ import os
 import json
 from io import BytesIO
 import asyncio
+from datetime import datetime
 
 
 from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Query
@@ -58,10 +59,13 @@ async def upload(
     bio = BytesIO(content)
     input_key = upload_fileobj(bio, key_prefix=f"input/{rid}")
 
+    now = datetime.utcnow().isoformat()
     await redis.hset(key, mapping={
         "status": "queued",
         "input": input_key,
         "output": "",
+        "attempt": 1,
+        "enqueued_at": now
     })
 
     background_tasks.add_task(enqueue_job, rid, input_key)
