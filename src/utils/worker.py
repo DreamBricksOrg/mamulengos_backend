@@ -30,6 +30,7 @@ class Worker:
             settings.WORKFLOW_NODE_ID_TEXT_INPUT
         )
         self.queued_jobs = {}
+        self.servers_in_use = set()
 
     def get_earliest_job(self, queued_jobs):
         min_date = None
@@ -63,13 +64,9 @@ class Worker:
 
         start = time.time()
         try:
-            #server_address = self.api.get_available_server_address()
             await redis.hset(f"job:{request_id}", mapping={"server": server_address})
-            #print("starting image generation")
-            #out = self.api.generate_image_buffer(server_address, bio)
             # Run generate_image_buffer in a background thread
             out = await asyncio.to_thread(self.api.generate_image_buffer, server_address, bio)
-            #print("finished image generation")
         except Exception as e:
             err = str(e)
             log.error("worker.generate_error", request_id=request_id, error=err)
@@ -121,15 +118,17 @@ class Worker:
 
     async def process_jobs(self):
         matching_statuses = {"processing", "queued", "failed"}
+        self.servers_in_use.clear()
+
         async for key in redis.scan_iter("job:*"):
             job_data = await redis.hgetall(key)
             status = job_data.get("status", b"")
             request_id = key[4:]
 
             if status in matching_statuses:
-                #log.info(f"Job ID: {key}")
-                #for k, v in job_data.items():
-                #    log.info(f"  {k}: {v}")
+                log.debug(f"Job ID: {key}")
+                for k, v in job_data.items():
+                    log.debug(f"  {k}: {v}")
 
                 if status == "queued":
                     if request_id not in self.queued_jobs:
@@ -149,7 +148,17 @@ class Worker:
                     else:
                         await redis.hset(f"job:{request_id}", mapping={"status": "error"})
 
-                #log.info("-" * 40)
+                elif status == "processing":
+                    server = job_data.get("server", "")
+                    self.servers_in_use.add(server)
+                    proc_start_at = job_data.get("proc_start_at", "")
+                    dt_proc_start_at = datetime.fromisoformat(proc_start_at)
+                    duration = datetime.now() - dt_proc_start_at
+                    if duration.total_seconds() > 300:
+                        await redis.hset(f"job:{request_id}",
+                                         mapping={"status": "fail", "error": "Timeout while processing"})
+
+                log.debug("-" * 40)
 
     async def activate_queued_jobs(self):
         # check if there are available servers to process the jobs
@@ -161,6 +170,8 @@ class Worker:
         available_servers = await self.api.get_available_server_addresses()
 
         for available_server in available_servers:
+            if available_server in self.servers_in_use:
+                continue
             if earliest_job_id:
                 earliest = self.queued_jobs[earliest_job_id]
                 request_id = earliest["job_id"]
@@ -171,11 +182,10 @@ class Worker:
                     await self.redis.hset(f"job:{request_id}", mapping={"status": "error", "error": "No input path"})
                     continue
 
-                #print(f"Process Job: {request_id} - {input_path}")
+                log.debug(f"Process Job: {request_id} - {input_path}")
                 self.queued_jobs.pop(request_id)
 
                 # Run process_one_job in a thread
-                #asyncio.create_task(asyncio.to_thread(self.process_one_job, request_id, input_path))
                 asyncio.create_task(self.process_one_job(available_server, request_id, input_path))
 
                 earliest_job_id = self.get_earliest_job(self.queued_jobs)
@@ -190,19 +200,19 @@ class Worker:
         """
 
         while True:
-            #print("sleep")
+            log.debug("sleep")
             await asyncio.sleep(0.5)
 
             # checks if there are new jobs
-            #print("check_for_new_jobs")
+            log.debug("check_for_new_jobs")
             await self.check_for_new_jobs()
 
-            #print("process_jobs")
+            log.debug("process_jobs")
             await self.process_jobs()
 
-            #print("activate_queued_jobs")
+            log.debug("activate_queued_jobs")
             await self.activate_queued_jobs()
 
-            #log.info("=" * 40)
+            log.debug("=" * 40)
 
 
