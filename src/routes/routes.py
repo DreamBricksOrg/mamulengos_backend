@@ -53,17 +53,16 @@ async def upload(
 
     rid = str(uuid.uuid4())
     key = f"job:{rid}"
-    await redis.hset(key, mapping={
-        "status": "queued",
-        "input": "",
-        "output": "",
-    })
 
     content = await image.read()
     bio = BytesIO(content)
     input_key = upload_fileobj(bio, key_prefix=f"input/{rid}")
 
-    await redis.hset(key, "input", input_key)
+    await redis.hset(key, mapping={
+        "status": "queued",
+        "input": input_key,
+        "output": "",
+    })
 
     background_tasks.add_task(enqueue_job, rid, input_key)
 
@@ -102,6 +101,7 @@ async def get_result(request_id: str = Query(...)):
 
     # se ainda não marcou como "processing"/"done"/"error", considera em fila
     return JSONResponse({"status": "queued"})
+
 
 @router.post("/api/notify")
 async def register_notification(
