@@ -152,7 +152,12 @@ class Worker:
                     server = job_data.get("server", "")
                     self.servers_in_use.add(server)
                     proc_start_at = job_data.get("proc_start_at", "")
-                    dt_proc_start_at = datetime.fromisoformat(proc_start_at)
+                    # se estiver vazio, usa agora para que duration seja zero
+                    dt_proc_start_at = (
+                        datetime.fromisoformat(proc_start_at)
+                        if proc_start_at
+                        else datetime.utcnow()
+                    )
                     duration = datetime.now() - dt_proc_start_at
                     if duration.total_seconds() > 300:
                         await redis.hset(f"job:{request_id}",
