@@ -1,0 +1,939 @@
+{
+  "5": {
+    "inputs": {
+      "width": 960,
+      "height": 1704,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "6": {
+    "inputs": {
+      "text": [
+        "3065",
+        0
+      ],
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      },
+      "clip": [
+        "3057",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "text": "photo, realistic, long neck, realism, extralimb, missing limb, floating limbs, disconnected limbs, mutation, mutated, ugly, disgusting, amputation, extra limbs, deformed, low quality, watermark",
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      },
+      "clip": [
+        "3057",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "3000": {
+    "inputs": {
+      "lora_name": "mamulengo_03-000006.safetensors",
+      "strength_model": 1.2500000000000002,
+      "strength_clip": 1.2500000000000002,
+      "model": [
+        "3057",
+        0
+      ],
+      "clip": [
+        "3057",
+        1
+      ]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "3001": {
+    "inputs": {
+      "image": "1.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "3002": {
+    "inputs": {
+      "seed": 10,
+      "steps": 30,
+      "cfg": 2.5,
+      "sampler_name": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 0.7500000000000001,
+      "model": [
+        "3000",
+        0
+      ],
+      "positive": [
+        "6",
+        0
+      ],
+      "negative": [
+        "7",
+        0
+      ],
+      "latent_image": [
+        "3006",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "3003": {
+    "inputs": {
+      "samples": [
+        "3002",
+        0
+      ],
+      "vae": [
+        "3057",
+        2
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "3005": {
+    "inputs": {
+      "width": 960,
+      "height": 0,
+      "interpolation": "nearest",
+      "method": "keep proportion",
+      "condition": "always",
+      "multiple_of": 0,
+      "image": [
+        "3077",
+        0
+      ]
+    },
+    "class_type": "ImageResize+",
+    "_meta": {
+      "title": "🔧 Image Resize"
+    }
+  },
+  "3006": {
+    "inputs": {
+      "pixels": [
+        "3005",
+        0
+      ],
+      "vae": [
+        "3057",
+        2
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "3023": {
+    "inputs": {
+      "image": "IMG_6272.JPG"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "3040": {
+    "inputs": {
+      "filename_prefix": "out_mamulengo_",
+      "images": [
+        "3102",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "3042": {
+    "inputs": {
+      "area": "face+forehead (if available)",
+      "grow": 10,
+      "grow_tapered": false,
+      "blur": 13,
+      "analysis_models": [
+        "3046",
+        0
+      ],
+      "image": [
+        "3071",
+        0
+      ]
+    },
+    "class_type": "FaceSegmentation",
+    "_meta": {
+      "title": "Face Segmentation"
+    }
+  },
+  "3043": {
+    "inputs": {
+      "model": "Florence-2-base",
+      "precision": "fp16",
+      "attention": "sdpa",
+      "convert_to_safetensors": false
+    },
+    "class_type": "Florence2ModelLoader",
+    "_meta": {
+      "title": "Florence2ModelLoader"
+    }
+  },
+  "3044": {
+    "inputs": {
+      "text_input": "",
+      "task": "more_detailed_caption",
+      "fill_mask": true,
+      "keep_model_loaded": false,
+      "max_new_tokens": 1024,
+      "num_beams": 3,
+      "do_sample": true,
+      "output_mask_select": "",
+      "seed": 536324010634522,
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      },
+      "image": [
+        "3042",
+        3
+      ],
+      "florence2_model": [
+        "3043",
+        0
+      ]
+    },
+    "class_type": "Florence2Run",
+    "_meta": {
+      "title": "Florence2Run"
+    }
+  },
+  "3045": {
+    "inputs": {
+      "PreviewTextNode_0": "The image is a close-up portrait of a middle-aged African-American man. He has short, dark hair and a beard. He is looking directly at the camera with a slight smile on his lips. He appears to be in his late 40s or early 50s. The background is blurred, but it seems to be an outdoor setting with trees and greenery. The man is wearing a gray t-shirt.",
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      },
+      "text": [
+        "3044",
+        2
+      ]
+    },
+    "class_type": "PreviewTextNode",
+    "_meta": {
+      "title": "Preview Text Node"
+    }
+  },
+  "3046": {
+    "inputs": {
+      "library": "dlib",
+      "provider": "CPU"
+    },
+    "class_type": "FaceAnalysisModels",
+    "_meta": {
+      "title": "Face Analysis Models"
+    }
+  },
+  "3057": {
+    "inputs": {
+      "ckpt_name": "dreamshaperXL_v21TurboDPMSDE.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "3063": {
+    "inputs": {
+      "string_a": "mamu13n60 stop motion character, stop motion character, normal size neck, animation, cartoon, disney, full body\n\n",
+      "string_b": [
+        "3045",
+        0
+      ],
+      "delimiter": "",
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      }
+    },
+    "class_type": "StringConcatenate",
+    "_meta": {
+      "title": "Concatenate"
+    }
+  },
+  "3064": {
+    "inputs": {
+      "PreviewTextNode_1": "mamu13n60 stop motion character, stop motion character, normal size neck, animation, cartoon, disney, full body\n\nThe image is a close-up portrait of a middle-aged African-American man. He has short, dark hair and a beard. He is looking directly at the camera with a slight smile on his lips. He appears to be in his late 40s or early 50s. The background is blurred, but it seems to be an outdoor setting with trees and greenery. The man is wearing a gray t-shirt.\n\nclassic straw hat, colorful and festive",
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      },
+      "text": [
+        "3065",
+        0
+      ]
+    },
+    "class_type": "PreviewTextNode",
+    "_meta": {
+      "title": "Preview Text Node"
+    }
+  },
+  "3065": {
+    "inputs": {
+      "string_a": [
+        "3063",
+        0
+      ],
+      "string_b": "\n\nclassic straw hat, colorful and festive",
+      "delimiter": "",
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      }
+    },
+    "class_type": "StringConcatenate",
+    "_meta": {
+      "title": "Concatenate"
+    }
+  },
+  "3071": {
+    "inputs": {
+      "width": 960,
+      "height": 0,
+      "interpolation": "nearest",
+      "method": "keep proportion",
+      "condition": "always",
+      "multiple_of": 0,
+      "image": [
+        "3023",
+        0
+      ]
+    },
+    "class_type": "ImageResize+",
+    "_meta": {
+      "title": "🔧 Image Resize"
+    }
+  },
+  "3075": {
+    "inputs": {
+      "string": [
+        "3044",
+        2
+      ],
+      "substring": "woman",
+      "case_sensitive": false,
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      }
+    },
+    "class_type": "StringContains",
+    "_meta": {
+      "title": "Contains"
+    }
+  },
+  "3076": {
+    "inputs": {
+      "preview": "0",
+      "source": [
+        "3087",
+        0
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Preview Any"
+    }
+  },
+  "3077": {
+    "inputs": {
+      "evaluate": [
+        "3087",
+        0
+      ],
+      "on_true": [
+        "3078",
+        0
+      ],
+      "on_false": [
+        "3001",
+        0
+      ]
+    },
+    "class_type": "SimpleCondition+",
+    "_meta": {
+      "title": "🔧 Simple Condition"
+    }
+  },
+  "3078": {
+    "inputs": {
+      "image": "7.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "3082": {
+    "inputs": {
+      "string": [
+        "3044",
+        2
+      ],
+      "substring": "girl",
+      "case_sensitive": false,
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      }
+    },
+    "class_type": "StringContains",
+    "_meta": {
+      "title": "Contains"
+    }
+  },
+  "3087": {
+    "inputs": {
+      "value": "a or b",
+      "a": [
+        "3075",
+        0
+      ],
+      "b": [
+        "3082",
+        0
+      ]
+    },
+    "class_type": "SimpleMath+",
+    "_meta": {
+      "title": "🔧 Simple Math"
+    }
+  },
+  "3088": {
+    "inputs": {
+      "control_net_name": "instantid-controlnet.safetensors"
+    },
+    "class_type": "ControlNetLoader",
+    "_meta": {
+      "title": "Load ControlNet Model"
+    }
+  },
+  "3089": {
+    "inputs": {
+      "image": "clipspace/clipspace-mask-25897696.3.png [input]"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "3092": {
+    "inputs": {
+      "samples": [
+        "3094",
+        0
+      ],
+      "vae": [
+        "3057",
+        2
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "3094": {
+    "inputs": {
+      "seed": 10,
+      "steps": 25,
+      "cfg": 2.5,
+      "sampler_name": "ddpm",
+      "scheduler": "karras",
+      "denoise": 1,
+      "model": [
+        "3096",
+        0
+      ],
+      "positive": [
+        "3096",
+        1
+      ],
+      "negative": [
+        "3096",
+        2
+      ],
+      "latent_image": [
+        "3096",
+        3
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "3096": {
+    "inputs": {
+      "instantid_file": "instantid-ip-adapter.bin",
+      "insightface": "CPU",
+      "weight": 1.0000000000000002,
+      "start_at": 0,
+      "end_at": 1,
+      "blur_kernel": 51,
+      "control_net": [
+        "3088",
+        0
+      ],
+      "model": [
+        "3057",
+        0
+      ],
+      "clip": [
+        "3057",
+        1
+      ],
+      "vae": [
+        "3057",
+        2
+      ],
+      "image_source": [
+        "3126",
+        0
+      ],
+      "image_face": [
+        "3071",
+        0
+      ],
+      "mask": [
+        "3132",
+        0
+      ]
+    },
+    "class_type": "ApplyZenID",
+    "_meta": {
+      "title": "ZenID FaceSwap"
+    }
+  },
+  "3097": {
+    "inputs": {
+      "evaluate": [
+        "3087",
+        0
+      ],
+      "on_true": [
+        "3099",
+        0
+      ],
+      "on_false": [
+        "3089",
+        0
+      ]
+    },
+    "class_type": "SimpleCondition+",
+    "_meta": {
+      "title": "🔧 Simple Condition"
+    }
+  },
+  "3098": {
+    "inputs": {
+      "evaluate": [
+        "3087",
+        0
+      ],
+      "on_true": [
+        "3099",
+        1
+      ],
+      "on_false": [
+        "3089",
+        1
+      ]
+    },
+    "class_type": "SimpleCondition+",
+    "_meta": {
+      "title": "🔧 Simple Condition"
+    }
+  },
+  "3099": {
+    "inputs": {
+      "image": "clipspace/clipspace-mask-25932054.3.png [input]"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "3101": {
+    "inputs": {
+      "image": "mamulengo_frame_1080px_v01.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "3102": {
+    "inputs": {
+      "x": 0,
+      "y": 0,
+      "resize_source": true,
+      "destination": [
+        "3101",
+        0
+      ],
+      "source": [
+        "3121",
+        5
+      ],
+      "mask": [
+        "3101",
+        1
+      ]
+    },
+    "class_type": "ImageCompositeMasked",
+    "_meta": {
+      "title": "ImageCompositeMasked"
+    }
+  },
+  "3108": {
+    "inputs": {
+      "pixels": [
+        "3116",
+        0
+      ],
+      "vae": [
+        "3119",
+        4
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "3109": {
+    "inputs": {
+      "weight": 1,
+      "start_at": 0,
+      "end_at": 1,
+      "instantid": [
+        "3113",
+        0
+      ],
+      "insightface": [
+        "3110",
+        0
+      ],
+      "control_net": [
+        "3112",
+        0
+      ],
+      "image": [
+        "3116",
+        0
+      ],
+      "model": [
+        "3119",
+        0
+      ],
+      "positive": [
+        "3119",
+        1
+      ],
+      "negative": [
+        "3119",
+        2
+      ]
+    },
+    "class_type": "ApplyInstantID",
+    "_meta": {
+      "title": "Apply InstantID"
+    }
+  },
+  "3110": {
+    "inputs": {
+      "provider": "CPU"
+    },
+    "class_type": "InstantIDFaceAnalysis",
+    "_meta": {
+      "title": "InstantID Face Analysis"
+    }
+  },
+  "3111": {
+    "inputs": {
+      "control_net_name": "depth-zoe-xl-v1.0-controlnet.safetensors"
+    },
+    "class_type": "ControlNetLoader",
+    "_meta": {
+      "title": "Load ControlNet Model"
+    }
+  },
+  "3112": {
+    "inputs": {
+      "control_net_name": "instantid-controlnet.safetensors"
+    },
+    "class_type": "ControlNetLoader",
+    "_meta": {
+      "title": "Load ControlNet Model"
+    }
+  },
+  "3113": {
+    "inputs": {
+      "instantid_file": "instantid-ip-adapter.bin"
+    },
+    "class_type": "InstantIDModelLoader",
+    "_meta": {
+      "title": "Load InstantID Model"
+    }
+  },
+  "3114": {
+    "inputs": {
+      "preprocessor": "Zoe-DepthMapPreprocessor",
+      "resolution": 1472,
+      "image": [
+        "3116",
+        0
+      ]
+    },
+    "class_type": "AIO_Preprocessor",
+    "_meta": {
+      "title": "AIO Aux Preprocessor"
+    }
+  },
+  "3116": {
+    "inputs": {
+      "width": 1472,
+      "height": 1472,
+      "interpolation": "nearest",
+      "method": "keep proportion",
+      "condition": "always",
+      "multiple_of": 0,
+      "image": [
+        "3092",
+        0
+      ]
+    },
+    "class_type": "ImageResize+",
+    "_meta": {
+      "title": "🔧 Image Resize"
+    }
+  },
+  "3117": {
+    "inputs": {
+      "strength": 0.4100000000000001,
+      "start_percent": 0,
+      "end_percent": 1,
+      "control_net": [
+        "3111",
+        0
+      ],
+      "image": [
+        "3114",
+        0
+      ]
+    },
+    "class_type": "Control Net Stacker",
+    "_meta": {
+      "title": "Control Net Stacker"
+    }
+  },
+  "3118": {
+    "inputs": {
+      "input_mode": "simple",
+      "lora_count": 2,
+      "lora_name_1": "mamulengo_03-000006.safetensors",
+      "lora_wt_1": 0.9500000000000002,
+      "model_str_1": 1,
+      "clip_str_1": 1,
+      "lora_name_2": "ClayAnimationRedm.safetensors",
+      "lora_wt_2": 0.9000000000000001,
+      "model_str_2": 1,
+      "clip_str_2": 1,
+      "lora_name_3": "None",
+      "lora_wt_3": 1,
+      "model_str_3": 1,
+      "clip_str_3": 1
+    },
+    "class_type": "LoRA Stacker",
+    "_meta": {
+      "title": "LoRA Stacker"
+    }
+  },
+  "3119": {
+    "inputs": {
+      "ckpt_name": "dreamshaperXL_v21TurboDPMSDE.safetensors",
+      "vae_name": "Baked VAE",
+      "clip_skip": -1,
+      "lora_name": "None",
+      "lora_model_strength": 1,
+      "lora_clip_strength": 1,
+      "positive": "mamu13n60 stop motion character, Clay Animation, Clay, Festa Junina style, plaid shirt with patches, straw hat, soft face fabric, colorful and festive.",
+      "negative": "photo, photography, nsfw, nude, ugly, broken, watermark",
+      "token_normalization": "none",
+      "weight_interpretation": "comfy",
+      "empty_latent_width": 1472,
+      "empty_latent_height": 1472,
+      "batch_size": 1,
+      "speak_and_recognation": {
+        "__value__": [
+          false,
+          true
+        ]
+      },
+      "lora_stack": [
+        "3118",
+        0
+      ],
+      "cnet_stack": [
+        "3117",
+        0
+      ]
+    },
+    "class_type": "Efficient Loader",
+    "_meta": {
+      "title": "Efficient Loader"
+    }
+  },
+  "3121": {
+    "inputs": {
+      "seed": 10,
+      "steps": 20,
+      "cfg": 1.9000000000000001,
+      "sampler_name": "dpmpp_2m_sde",
+      "scheduler": "karras",
+      "denoise": 0.8000000000000002,
+      "preview_method": "none",
+      "vae_decode": "true",
+      "model": [
+        "3109",
+        0
+      ],
+      "positive": [
+        "3109",
+        1
+      ],
+      "negative": [
+        "3109",
+        2
+      ],
+      "latent_image": [
+        "3108",
+        0
+      ],
+      "optional_vae": [
+        "3119",
+        4
+      ]
+    },
+    "class_type": "KSampler (Efficient)",
+    "_meta": {
+      "title": "KSampler (Efficient)"
+    }
+  },
+  "3126": {
+    "inputs": {
+      "width": 512,
+      "height": 0,
+      "interpolation": "nearest",
+      "method": "keep proportion",
+      "condition": "always",
+      "multiple_of": 0,
+      "image": [
+        "3003",
+        0
+      ]
+    },
+    "class_type": "ImageResize+",
+    "_meta": {
+      "title": "🔧 Image Resize"
+    }
+  },
+  "3130": {
+    "inputs": {
+      "image": "clipspace/clipspace-mask-24787132.4.png [input]"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "3131": {
+    "inputs": {
+      "image": "clipspace/clipspace-mask-23897675.3.png [input]"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "3132": {
+    "inputs": {
+      "area": "face+forehead (if available)",
+      "grow": 0,
+      "grow_tapered": false,
+      "blur": 13,
+      "analysis_models": [
+        "3046",
+        0
+      ],
+      "image": [
+        "3126",
+        0
+      ]
+    },
+    "class_type": "FaceSegmentation",
+    "_meta": {
+      "title": "Face Segmentation"
+    }
+  }
+}

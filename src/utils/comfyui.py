@@ -24,7 +24,7 @@ def queue_prompt(
                            Se None, será usado settings.COMFYUI_API_SERVER.
     :raises HTTPException: Se o servidor retornar status != 200.
     """
-    server = server_address or settings.COMFYUI_API_SERVER
+    server = server_address or settings.COMFYUI_API_SERVER1
     url = f"{server}/prompt"
     payload = {"prompt": prompt, "client_id": client_id}
     data = json.dumps(payload).encode("utf-8")
@@ -72,7 +72,7 @@ def check_input_image_ready(
     :param filename: Nome do arquivo a verificar.
     :param server_address: Endereço base do servidor ComfyUI.
     """
-    server = server_address or settings.COMFYUI_API_SERVER
+    server = server_address or settings.COMFYUI_API_SERVER1
     params = {"filename": filename, "subfolder": "", "type": "input"}
     url_values = urllib.parse.urlencode(params)
     url = f"{server}/view?{url_values}"
@@ -98,7 +98,7 @@ def upload_image(
     :param subfolder: Subpasta no servidor onde deseja armazenar a imagem.
     :raises HTTPException: Se o servidor retornar status != 200.
     """
-    server = server_address or settings.COMFYUI_API_SERVER
+    server = server_address or settings.COMFYUI_API_SERVER1
     url = f"{server}/upload/image"
 
     try:
@@ -151,7 +151,7 @@ def get_image(
     :param aws_alb_cookie: Cookie AWSALB para balanceamento de carga (opcional).
     :raises HTTPException: Se o servidor retornar status != 200.
     """
-    server = server_address or settings.COMFYUI_API_SERVER
+    server = server_address or settings.COMFYUI_API_SERVER1
     params = {"filename": filename, "subfolder": subfolder, "type": folder_type}
     url_values = urllib.parse.urlencode(params)
     url = f"{server}/view?{url_values}"
@@ -188,7 +188,7 @@ D
     :param aws_alb_cookie: Cookie AWSALB para autenticação (opcional).
     :raises HTTPException: Se o servidor retornar status != 200.
     """
-    server = server_address or settings.COMFYUI_API_SERVER
+    server = server_address or settings.COMFYUI_API_SERVER1
     url = f"{server}/history/{prompt_id}"
 
     headers = {}
@@ -219,7 +219,7 @@ def get_queue_status(server_address: Optional[str] = None) -> Any:
     :param server_address: Endereço base do servidor ComfyUI.
     :raises HTTPException: Se o servidor retornar status != 200.
     """
-    server = server_address or settings.COMFYUI_API_SERVER
+    server = server_address or settings.COMFYUI_API_SERVER1
     url = f"{server}/queue"
 
     response = requests.get(url)
