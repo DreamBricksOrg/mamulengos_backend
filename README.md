@@ -39,7 +39,7 @@
 
 5. Inicie a aplicação:
 
-  Antes adicione as váriaveis de ambiente ao bash onde estiver executando, para ter acesso de desenvolvimento a stack da AWS que está sendo usada.
+  Antes adicione as variáveis de ambiente ao bash onde estiver executando, para ter acesso de desenvolvimento a stack da AWS que está sendo usada.
 
    ```bash
    $env:AWS_ACCESS_KEY_ID="XXXXXXXXXXXXXX"
