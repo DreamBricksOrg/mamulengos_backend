@@ -207,3 +207,15 @@ SMS_API_URL=https://smsdev.com.br/send
 SMS_API_KEY=SEUTOKENAQUI
 DEFAULT_PROCESSING_TIME=80
 ```
+
+## Dummy ComfyUI Server
+
+Para desenvolvimento, você pode rodar um servidor dummy que imita as chamadas usadas pelo backend. Ele recebe uma imagem em `/upload/image`, processa em segundo plano e devolve o mesmo arquivo com o texto "dummy" sobreposto após um atraso configurável (variável `DEFAULT_PROCESSING_TIME`, em milissegundos). Para iniciar:
+
+```bash
+uvicorn dummy_comfyui_server:app --app-dir src --port 8188
+```
+
+O servidor implementa os endpoints `/prompt`, `/history/{id}`, `/view`, `/queue` e o WebSocket `/ws`.
+
+
