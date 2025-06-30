@@ -160,8 +160,10 @@ class Worker:
                     )
                     duration = datetime.now() - dt_proc_start_at
                     if duration.total_seconds() > 300:
-                        await redis.hset(f"job:{request_id}",
-                                         mapping={"status": "fail", "error": "Timeout while processing"})
+                        await redis.hset(
+                            f"job:{request_id}",
+                            mapping={"status": "failed", "error": "Timeout while processing"},
+                        )
 
                 log.debug("-" * 40)
 
