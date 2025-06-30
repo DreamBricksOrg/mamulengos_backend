@@ -182,7 +182,6 @@ def get_history(
     """
     Recupera o histórico de execuções de um dado prompt_id via GET em /history/{prompt_id}.
     Retorna o JSON completo da resposta.
-D
     :param prompt_id: Identificador do prompt gerado anteriormente.
     :param server_address: Endereço base do servidor ComfyUI.
     :param aws_alb_cookie: Cookie AWSALB para autenticação (opcional).
